@@ -1,5 +1,6 @@
 ''''
-3loss齐飞,让我成了吧 ,太难受了
+3loss齐飞,训练ae生成虚假样本.其中,encoder之后的特征向量要detach一下.只更新decoder
+我得问下老师,后面decoder在学习中不就改变了吗为什么还会觉得依旧具有重构能力呢?还有语义 gan
 貌似是成了
 '''
 import os
@@ -13,12 +14,12 @@ parser.add_argument('--lr_scale', type=float, default=1e4, help='wgan discrinato
 parser.add_argument("--optimizer", default="Adam", help="Adam SGD")
 parser.add_argument("--epochs", type=int, default=1000)
 parser.add_argument("--gpus", default="0")
-parser.add_argument("--batch_size", type=int, default=128)
+###苗师兄batchsize为32,我记得之前实验就是bacthsize小点效果好,有时间再验证.之前我一直设置的为128
+parser.add_argument("--batch_size", type=int, default=32)
 # wgan的 discriminator
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 parser.add_argument('--w_loss_weight', type=float, default=1e-5, help='wloss上加的权重,苗师兄wgan是1e-5')
 parser.add_argument('--cross_loss_weight', type=float, default=1e-5, help='cross_loss上加的权重')
-parser.add_argument("--set_sigmoid", type=str, default='False', help="wgan的dis是否需要sigmoid,不能要sigmoid!")
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
@@ -50,12 +51,14 @@ from tqdm import tqdm
 import sys
 from model import *
 from utils import *
+from models import resnet_orig
 
-# v0貌似忘了保存权重 v1保存了权重
-name_project = f"train_ae_with3loss_chamfer_w"
+# 起势
+name_args = get_args_str(args)
+name_project = f"train_ae_with3loss_chamfer_blend_w"
 results_root = f"../results/{name_project}"
 os.makedirs(results_root, exist_ok=True)
-results_root = results_root + f"/{args}"
+results_root = results_root + f"/{name_args}"
 os.makedirs(results_root, exist_ok=True)
 file = open(results_root + "/args.txt", "w")
 file.write(f"{args}")
@@ -79,26 +82,22 @@ trainloader = DataLoader(trainset, args.batch_size, shuffle=True, num_workers=2)
 testloader = DataLoader(testset, args.batch_size, shuffle=True, num_workers=2)
 
 # 模型
-discriminator = Discriminator_WGAN_miao_cifar10(set_sigmoid=args.set_sigmoid).cuda()  # set_sigmoid=False
-# discriminator = simple_discriminator().cuda()
-discriminator = torch.nn.DataParallel(discriminator)
+## wgan的dis是否需要sigmoid,不能要sigmoid!
+discriminator = Discriminator_WGAN_miao_cifar10(set_sigmoid=False).cuda()  # set_sigmoid=False
 discriminator.apply(weights_init)
 
 model_g = AutoEncoder_Miao().cuda()
-model_g = torch.nn.DataParallel(model_g)
 
 model_g.apply(weights_init)
-state_g = torch.load("../betterweights/ae_miao_OnlyToTensor--sigmoid--epoch348--loss0.03.pth")
-model_g.load_state_dict(state_g["model"])
+state_g = torch.load("../betterweights/ae_miao_reconstruct_v0--mseloss0.000919.pth")
+model_g.load_state_dict(state_g)
 
-model_d = getResNet("resnet" + "18").cuda()
-model_d = torch.nn.DataParallel(model_d)
-state = torch.load("../betterweights/resnet18--transform_onlyToTensor--epoch199--acc095--loss017.pth")
-model_d.load_state_dict(state["model"])
+model_d = resnet_orig.ResNet18(num_classes=10).cuda()
+state = torch.load("../betterweights/resnet18_baseline_trainedbymiao_acc0.9532.pth")
+model_d.load_state_dict(state)
 
 # 优化器
-criterion_cross = nn.CrossEntropyLoss().cuda()
-criterion_bce = nn.BCEWithLogitsLoss().cuda()
+criterion_blend = nn.CrossEntropyLoss().cuda()
 chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
 
 optimizer_dis = torch.optim.Adam(discriminator.parameters(), lr=args.lr_dis, betas=(args.beta1, 0.999))
@@ -154,7 +153,7 @@ def ae(epoch):
         index_1 = range(1, len(virtual_label), 2)
         virtual_label = virtual_label[index_0] + virtual_label[index_1]
         virtual_label = virtual_label.detach()
-        loss_cross = criterion_cross(pred_model_d, virtual_label)
+        loss_cross = criterion_blend(pred_model_d, virtual_label)
         loss_cross_all += loss_cross.item()
         (loss_cross * args.cross_loss_weight).backward(retain_graph=True)
 

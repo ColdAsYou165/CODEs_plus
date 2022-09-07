@@ -25,11 +25,11 @@ from utils import *
 from models import resnet_orig
 
 name_project = "train_resnet_github"
-root_result = f"../result/{name_project}"
+root_result = f"../results/{name_project}/{time.time():.2f}"
 os.makedirs(root_result)
 root_pth = root_result + "/pth"
 os.makedirs(root_pth)
-root_runs = root_result + f"/{time.time():.2f}"
+root_runs = root_result + f"/runs"
 writer = SummaryWriter(root_runs)
 writer.add_text("实验描述", "训练resnet18,transform 只有totensor,一定要训练出来啊")
 # 超参数

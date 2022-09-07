@@ -20,6 +20,7 @@ parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. de
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
+args=get
 print(str(args))
 
 import torch

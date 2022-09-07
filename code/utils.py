@@ -27,7 +27,12 @@ transform_train_cifar_miao = transforms.Compose([
     # 苗师兄源代码归一化注释掉了
     # transforms.Normalize(mean_cifar, std_cifar),
 ])
-
+transform_train_cifar_miao_Norm = transforms.Compose([
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomCrop(32, padding=4),
+    transforms.ToTensor(),
+    transforms.Normalize(mean_cifar, std_cifar),
+])
 transform_test_cifar_miao = transforms.Compose([
     transforms.ToTensor(),
     # 苗师兄源代码归一化注释掉了
@@ -250,7 +255,8 @@ def get_args_str(args):
     :param args:
     :return: 字符类型的args,且替换掉特殊字符
     '''
-    return str(args).replace("(", "").replace(")", "").replace(",", "--").replace(" ", "").replace("=", "")
+    return str(args).replace("(", "").replace(")", "").replace(",", "--").replace(" ", "").replace("=", "").replace(
+        "Namespace", "args")
 
 
 # 压制训练用
@@ -294,7 +300,7 @@ def get_acc(model, loader):
     return acc
 
 
-def make_result_dir(root_result="../result/noname"):
+def make_result_dir(root_result="../results/noname"):
     '''
     创建实验文件夹,以及实验/pic 实验/pth子文件夹
     :param root_result:

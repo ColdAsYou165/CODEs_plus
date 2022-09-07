@@ -409,7 +409,7 @@ class AutoEncoder(nn.Module):
 class AutoEncoder_origin_Miaoshixiong(nn.Module):
     '''
     原版苗师兄CODEs使用的ae
-    改类名记得改supper
+    改类名记得改super
     '''
 
     def __init__(self):
@@ -673,7 +673,7 @@ class AutoEncoder_Miao(nn.Module):
         x = self.ct8(x)
         return x
 
-    def generate_virtual(self, x, set_encoded_detach=False):
+    def generate_virtual(self, x, set_encoded_detach):
         '''
         :param x:一个batch的图像样本,batch必须为整数
         :return: batch/2 个生成的虚假图像
@@ -888,7 +888,7 @@ if __name__ == "__main__":
     #     print(pred.shape)
     #     decoded = model.decoder(pred)
     #     print(decoded.shape)
-    model=simple_discriminator()
+    '''model=simple_discriminator()
     x=torch.randn([32,3,32,32])
     y=model(x).reshape(-1)
-    print(y.shape)
+    print(y.shape)'''

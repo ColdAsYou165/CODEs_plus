@@ -3,7 +3,7 @@
 '''
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3"
 
 import torch
 import torchvision
@@ -23,7 +23,9 @@ from utils import *
 from models import resnet_orig
 
 # 起势
-name_project = f"train_resnet_basline"
+# v1 transform_train_cifar_miao_Norm的效果 weight_decay=5e-4 窗口12
+# v2 transform_train_cifar_miao_Norm的效果 weight_decay=1e-4 窗口14
+name_project = f"train_resnet_basline_v2"
 root_result = f"../results/{name_project}"
 os.makedirs(root_result, exist_ok=True)
 root_result_pth = root_result + f"/pth"
@@ -35,7 +37,7 @@ epochs = 200
 
 # 数据集
 cifar10_train = torchvision.datasets.CIFAR10(root="../data/cifar10", train=True, download=False,
-                                             transform=transform_train_cifar_miao)
+                                             transform=transform_train_cifar_miao_Norm)
 cifar10_test = torchvision.datasets.CIFAR10(root="../data/cifar10", train=False, download=False,
                                             transform=transform_test_cifar_miao)
 cifar100_train = torchvision.datasets.CIFAR100(root="../data/cifar100", train=True, download=False,
@@ -55,10 +57,9 @@ trainloader_svhn = torch.utils.data.DataLoader(svhn_train, batch_size=batch_size
 testloader_svhn = torch.utils.data.DataLoader(svhn_test, batch_size=batch_size, shuffle=True, num_workers=2)
 
 net = resnet_orig.ResNet18(num_classes=10).cuda()
-# net = torch.nn.DataParallel(net)
 criterion = nn.CrossEntropyLoss().cuda()
-# optimizer = torch.optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)#师兄
-optimizer = torch.optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+### 师兄weight_decay设置1e-4,但是设置weight_decay5e-4效果更好.
+optimizer = torch.optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
 
 
 def base_train(epoch, net):
@@ -136,7 +137,6 @@ def train_baseline():
             lr = 8e-4
         adjust_learning_rate(optimizer, lr)
         base_train(epoch, net)
-        torch.save(net.state_dict(), root_result + f"/baseline_resnet--epoch{epoch}.pth")
 
 
 def test_resnet():
@@ -144,7 +144,9 @@ def test_resnet():
     测试下resent各项指标
     :return:
     '''
-    root = "/mnt/data/maxiaolong/CODEsSp/result/train_resnet_basline/baseline_resnet--epoch199.pth"
+    root = "/mnt/data/maxiaolong/CODEsSp/results/train_resnet_github/pth/resnet_github--acc0.9556.pth"
+    # root = "/mnt/data/maxiaolong/CODEsSp/results/train_resnet_basline/pth/resnet18_baseline--epoch199--acc0.95.pth"
+    print(f"{root}")
     net.load_state_dict(torch.load(root))
     acc_train = get_acc(net, trainloader_cifar10)
     acc_test = get_acc(net, testloader_cifar10)
