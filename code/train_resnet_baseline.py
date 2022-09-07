@@ -25,7 +25,7 @@ from models import resnet_orig
 # 起势
 # v1 transform_train_cifar_miao_Norm的效果 weight_decay=5e-4 窗口12
 # v2 transform_train_cifar_miao_Norm的效果 weight_decay=1e-4 窗口14
-name_project = f"train_resnet_basline_v2"
+name_project = f"train_resnet_basline"
 root_result = f"../results/{name_project}"
 os.makedirs(root_result, exist_ok=True)
 root_result_pth = root_result + f"/pth"
@@ -37,7 +37,7 @@ epochs = 200
 
 # 数据集
 cifar10_train = torchvision.datasets.CIFAR10(root="../data/cifar10", train=True, download=False,
-                                             transform=transform_train_cifar_miao_Norm)
+                                             transform=transform_train_cifar_miao)
 cifar10_test = torchvision.datasets.CIFAR10(root="../data/cifar10", train=False, download=False,
                                             transform=transform_test_cifar_miao)
 cifar100_train = torchvision.datasets.CIFAR100(root="../data/cifar100", train=True, download=False,
@@ -59,7 +59,7 @@ testloader_svhn = torch.utils.data.DataLoader(svhn_test, batch_size=batch_size, 
 net = resnet_orig.ResNet18(num_classes=10).cuda()
 criterion = nn.CrossEntropyLoss().cuda()
 ### 师兄weight_decay设置1e-4,但是设置weight_decay5e-4效果更好.
-optimizer = torch.optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+optimizer = torch.optim.SGD(net.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
 
 def base_train(epoch, net):

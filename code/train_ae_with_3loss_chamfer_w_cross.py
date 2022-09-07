@@ -12,7 +12,7 @@ parser.add_argument("--lr_g", type=float, default=0.0002, help="model_g的lr")
 parser.add_argument('--lr_dis', type=float, default=0.0002, help='wgan discrinator lr, default=0.0002')
 parser.add_argument('--lr_scale', type=float, default=1e4, help='wgan discrinator lr, default=0.0002')
 parser.add_argument("--optimizer", default="Adam", help="Adam SGD")
-parser.add_argument("--epochs", type=int, default=1000)
+parser.add_argument("--epochs", type=int, default=300)
 parser.add_argument("--gpus", default="0")
 ###苗师兄batchsize为32,我记得之前实验就是bacthsize小点效果好,有时间再验证.之前我一直设置的为128
 parser.add_argument("--batch_size", type=int, default=32)
@@ -22,14 +22,6 @@ parser.add_argument('--w_loss_weight', type=float, default=1e-5, help='wloss上�
 parser.add_argument('--cross_loss_weight', type=float, default=1e-5, help='cross_loss上加的权重')
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
-
-if args.set_sigmoid == "True":
-    args.set_sigmoid = True
-elif args.set_sigmoid == "False":
-    args.set_sigmoid = False
-else:
-    print(f"--set_sigmoid传参为{args.set_sigmoid},错误!")
-    exit()
 
 if args.lr_dis == 0 or args.lr_dis < 0:
     args.lr_dis = args.lr_g / args.lr_scale
@@ -99,7 +91,7 @@ model_d.load_state_dict(state)
 # 优化器
 criterion_blend = nn.CrossEntropyLoss().cuda()
 chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
-
+### 师兄的鉴别器和生成器 的优化器也都是用的Adam
 optimizer_dis = torch.optim.Adam(discriminator.parameters(), lr=args.lr_dis, betas=(args.beta1, 0.999))
 optimizer_g = torch.optim.Adam(model_g.parameters(), lr=args.lr_g, betas=(args.beta1, 0.999))
 
@@ -128,9 +120,8 @@ def ae(epoch):
         d_loss_real.backward(one)  # real为0
         pred_dis_real = output.sigmoid()  # 观察量 dis对real的pred,问题是苗师兄里面接了mean
         pred_dis_real_all += pred_dis_real.item()
-        # 之前是原始几张图片拼接再送到ae中去.现在要先转化为特征再送到ae中去.
-        decoded = model_g.module.generate_virtual(inputs)
-
+        # ##encoder之后先detach再decoder得到虚假图像
+        decoded = model_g.generate_virtual(inputs, set_encoded_detach=True)
         output = discriminator(decoded.detach())  # 注意detach
         d_loss_fake = output
         d_loss_fake.backward(mone)  # fake为1
@@ -144,7 +135,7 @@ def ae(epoch):
 
         output = discriminator(decoded)
         g_loss = args.w_loss_weight * output
-        g_loss.backward(one, retain_graph=True)
+        g_loss.backward(one, retain_graph=True)  # 怎么增加类别信息嫩,gan语义生成错在哪里嫩??
 
         ##计算crossentropyloss
         pred_model_d = model_d(decoded)
@@ -182,7 +173,7 @@ def ae(epoch):
     writer.add_scalar("chamfer_loss", loss_chamfer_all, epoch)
     writer.add_scalar("loss_cross", loss_cross_all, epoch)
     # 每个epoch生成并保存一张虚假图片
-    virtual_data = model_g.module.generate_virtual(origin_data)
+    virtual_data = model_g.generate_virtual(origin_data, set_encoded_detach=True)
     save_image(virtual_data, results_pic_root + f"/virpic_--epoch{epoch}--chamferloss{loss_chamfer_all:.3f}.jpg")
 
     # 保存模型权重

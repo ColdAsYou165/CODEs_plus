@@ -172,20 +172,40 @@
 #python train_resnet_with_virtual.py --gpus 5 --loss_virtual_weight 1e-4 --crossweight 5 &
 #sleep 60
 
-python train_ae_with_crossloss_and_chamferloss.py --gpus 1 --weight_crossloss 1e-8 &
+#python train_ae_with_crossloss_and_chamferloss.py --gpus 1 --weight_crossloss 1e-8 &
+#sleep 60
+#python train_ae_with_crossloss_and_chamferloss.py --gpus 2 --weight_crossloss 1e-7 &
+#sleep 60
+#python train_ae_with_crossloss_and_chamferloss.py --gpus 3 --weight_crossloss 1e-6 &
+#sleep 60
+#python train_ae_with_crossloss_and_chamferloss.py --gpus 4 --weight_crossloss 1e-10 &
+#sleep 60
+#wait
+#python train_ae_with_crossloss_and_chamferloss.py --gpus 1 --weight_crossloss 1e-9 &
+#sleep 60
+#python train_ae_with_crossloss_and_chamferloss.py --gpus 2 --weight_crossloss 1e-14 &
+#sleep 60
+#python train_ae_with_crossloss_and_chamferloss.py --gpus 3 --weight_crossloss 1e-18 &
+#sleep 60
+#python train_ae_with_crossloss_and_chamferloss.py --gpus 4 --weight_crossloss 1e-11 &
+#sleep 60
+
+python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1 --gpus 0 &
 sleep 60
-python train_ae_with_crossloss_and_chamferloss.py --gpus 2 --weight_crossloss 1e-7 &
+python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-1 --gpus 4 &
 sleep 60
-python train_ae_with_crossloss_and_chamferloss.py --gpus 3 --weight_crossloss 1e-6 &
-sleep 60
-python train_ae_with_crossloss_and_chamferloss.py --gpus 4 --weight_crossloss 1e-10 &
+python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-2 --gpus 5 &
 sleep 60
 wait
-python train_ae_with_crossloss_and_chamferloss.py --gpus 1 --weight_crossloss 1e-9 &
+python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-3 --gpus 0 &
 sleep 60
-python train_ae_with_crossloss_and_chamferloss.py --gpus 2 --weight_crossloss 1e-14 &
+python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-4 --gpus 1 &
 sleep 60
-python train_ae_with_crossloss_and_chamferloss.py --gpus 3 --weight_crossloss 1e-18 &
+python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-5 --gpus 2 &
 sleep 60
-python train_ae_with_crossloss_and_chamferloss.py --gpus 4 --weight_crossloss 1e-11 &
+python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e5 --gpus 3 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e5 --gpus 4 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e5 --gpus 5 &
 sleep 60
