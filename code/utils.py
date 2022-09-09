@@ -31,6 +31,7 @@ transform_train_cifar_miao_Norm = transforms.Compose([
     transforms.RandomHorizontalFlip(),
     transforms.RandomCrop(32, padding=4),
     transforms.ToTensor(),
+    # ##加了之后acc0.5
     transforms.Normalize(mean_cifar, std_cifar),
 ])
 transform_test_cifar_miao = transforms.Compose([

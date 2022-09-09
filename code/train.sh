@@ -190,22 +190,25 @@
 #python train_ae_with_crossloss_and_chamferloss.py --gpus 4 --weight_crossloss 1e-11 &
 #sleep 60
 
-python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1 --gpus 0 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-1 --gpus 4 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-2 --gpus 5 &
-sleep 60
-wait
-python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-3 --gpus 0 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-4 --gpus 1 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-5 --gpus 2 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e5 --gpus 3 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e5 --gpus 4 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e5 --gpus 5 &
-sleep 60
+#python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1 --gpus 0 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-1 --gpus 4 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-2 --gpus 5 &
+#sleep 60
+#wait
+#python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-3 --gpus 0 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-4 --gpus 1 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e4 --cross_loss_weight 1e-5 --gpus 2 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e5 --gpus 3 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e6 --gpus 4 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e5 --cross_loss_weight 1e-4 --gpus 5 &
+#sleep 60
+#结果p用没有
+
+python train_ae_with_2loss_chamfer_and_wloss.py --gpus 0

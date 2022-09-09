@@ -2,8 +2,12 @@
 测试单独使用一个文件
 '''
 import os
+import argparse
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+parser = argparse.ArgumentParser()
+parser.add_argument("--gpus", default="0")
+args = parser.parse_args()
+os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
 import torch
 import torchvision
@@ -47,6 +51,8 @@ testloader_svhn = torch.utils.data.DataLoader(svhn_test, batch_size=batch_size, 
 # 模型
 model_resnet18 = resnet_orig.ResNet18(num_classes=10).cuda()
 
+criterion_mseloss = torch.nn.MSELoss().cuda()
+
 
 def test_resnet_acc_and_mmc(model=None, root=""):
     '''
@@ -78,6 +84,43 @@ def test_resnet_acc_and_mmc(model=None, root=""):
     '''
 
 
+def test_ae_reconstruct(model=AutoEncoder_Miao().cuda(), trainloader=trainloader_cifar10,
+                        testloader=testloader_cifar10, root=""):
+    '''
+    检查ae重构的mseloss
+    :param model:
+    :param trainloader:
+    :param testloader:
+    :param root:
+    :return:
+    '''
+    # "../betterweights/ae_miao_reconstruct_v0--mseloss0.000919.pth"
+    # "../betterweights/ae_miao_trainedbybclloss--epoch496--loss0.0006234363307940621.pth"现在用这个2022年9月9日
+    model_state = torch.load(root)
+    model.load_state_dict(model_state)
+
+    loss_mse_all = 0
+    for batch_idx, (data, label) in enumerate(tqdm(trainloader)):
+        data = data.cuda()
+        label = label.cuda()
+        reconstruct = model(data)
+        loss_mse = criterion_mseloss(data, reconstruct)
+        loss_mse_all += loss_mse.item()
+    loss_mse_all /= len(trainloader)
+    print("loss_mse_train=", loss_mse_all)
+
+    loss_mse_all = 0
+    for batch_idx, (data, label) in enumerate(tqdm(testloader)):
+        data = data.cuda()
+        label = label.cuda()
+        reconstruct = model(data)
+        loss_mse = criterion_mseloss(data, reconstruct)
+        loss_mse_all += loss_mse.item()
+    loss_mse_all /= len(testloader)
+    print("loss_mse_test=", loss_mse_all)
+
+
 if __name__ == "__main__":
     pass
     # test_resnet_acc_and_mmc(model=model_resnet18, root="../betterweights/resnet18_baseline_trainedbymiao_acc0.9532.pth")
+    test_ae_reconstruct(root="../betterweights/ae_miao_trainedbybclloss--epoch496--loss0.0006234363307940621.pth")
