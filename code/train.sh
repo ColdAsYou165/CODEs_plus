@@ -210,5 +210,36 @@
 #python train_ae_with_3loss_chamfer_w_cross.py --lr_dis 0 --lr_scale 1e5 --cross_loss_weight 1e-4 --gpus 5 &
 #sleep 60
 #结果p用没有
+#--batch_size  --blend_loss_weight
 
-python train_ae_with_2loss_chamfer_and_wloss.py --gpus 0
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 0 --batch_size 128 --blend_loss_weight 1e-1 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 1 --batch_size 128 --blend_loss_weight 1e-2 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --batch_size 128 --blend_loss_weight 1e-3 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 6 --batch_size 128 --blend_loss_weight 1e-4 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 7 --batch_size 128 --blend_loss_weight 1e-5 &
+wait
+
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 0 --batch_size 32 --blend_loss_weight 1e-1 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 1 --batch_size 32 --blend_loss_weight 1e-2 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --batch_size 32 --blend_loss_weight 1e-3 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 6 --batch_size 32 --blend_loss_weight 1e-4 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 7 --batch_size 32 --blend_loss_weight 1e-5 &
+wait
+
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 0 --batch_size 128 --blend_loss_weight 1e-5 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 1 --batch_size 128 --blend_loss_weight 1e-7 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --batch_size 128 --blend_loss_weight 1e-9 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 6 --batch_size 128 --blend_loss_weight 1e-11 &
+sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 7 --batch_size 128 --blend_loss_weight 1e-13 &

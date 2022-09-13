@@ -87,8 +87,6 @@ chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
 optimizer_g = torch.optim.Adam(model_g.parameters(), lr=args.lr_g, betas=(args.beta1, 0.999))
 
 
-
-
 # 训练
 def ae(epoch):
     one = torch.FloatTensor([1])
@@ -154,7 +152,7 @@ def ae(epoch):
     # 保存模型权重
     if True and (epoch + 1) % 100 == 0:
         state = {"model": model_g.state_dict(), "loss": loss_chamfer_all}
-        torch.save(state, results_pth_root + f"model_chamfer_and_wloss--epoch{epoch}.pth")
+        torch.save(state, results_pth_root + f"/model_chamfer_and_wloss--epoch{epoch}.pth")
 
 
 for epoch in range(args.epochs):

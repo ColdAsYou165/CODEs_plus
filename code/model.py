@@ -126,6 +126,7 @@ Reference:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import numpy as np
 
 
 class BasicBlock(nn.Module):
@@ -673,19 +674,60 @@ class AutoEncoder_Miao(nn.Module):
         x = self.ct8(x)
         return x
 
-    def generate_virtual(self, x, set_encoded_detach):
+    def generate_virtual(self, data, label, set_encoded_detach, train_generate, num_classes=10, scale_generate=2):
         '''
-        :param x:一个batch的图像样本,batch必须为整数
-        :return: batch/2 个生成的虚假图像
-        # 不需要用torch.random.shuffle()因为,我们这样相邻两个合在一起就已经相当于随机拼接了,何况dataloader也有shuffle
-        # 不需要顾及z的batch不是偶数的情况,dataset是偶数,batchsize是偶数,所以batch一定是偶数
+        生成虚假样本
+        :param data:
+        :param label:
+        :param set_encoded_detach: encode之后detach一下,意思是不更新encoder的权重
+        :param train_generate:是否为训练生成虚假样本,True则标签为[0.5,0.5,...] False则label都为0.1
+        :param scale_generate: 多少个0.5倍的虚假样本
+        :param num_classes: 样本种类数
+        :return: virtual_data,virtual_label
         '''
-        z = self.encoder(x)  # [batch, 64, 8, 8]
+        data_all = []
+        label_all = []
+        batch_size = int(data.shape[0] * (scale_generate * 0.5))
+        for i in range(scale_generate + 1):
+            idx = torch.randperm(data.shape[0])
+            newdata = data[idx]
+            newlabel = label[idx]
+            data_all.append(newdata)
+            label_all.append(newlabel)
+        data = torch.concat(data_all, dim=0).detach()
+        label = torch.concat(label_all, dim=0).detach()
+        # 虚假样本
+        z = self.encoder(data)  # [batch, 64, 8, 8]
         z = z.reshape(-1, z.shape[1] * 2, z.shape[2], z.shape[3])
         if set_encoded_detach:
             z = z.detach()
-        virtual = self.decoder_virtual(z)
-        return virtual
+        virtual_data = self.decoder_virtual(z)
+
+        # 虚假标签
+        virtual_label = F.one_hot(label, num_classes)
+        index_0 = range(0, len(virtual_label), 2)
+        index_1 = range(1, len(virtual_label), 2)
+        virtual_label = virtual_label[index_0] + virtual_label[index_1]  # [0,1,1,0,...0]和[0,2,0,0...0]
+        # ##排除相同类,就要在所有的索引中排除label有2的索引
+        idx_2 = torch.where(virtual_label == 2)[0].numpy()  # label有2,也就是相同类生成的虚假样本
+        idx_all = np.arange(0, virtual_label.shape[0])
+        idx_1 = np.setdiff1d(idx_all, idx_2)  # 取补集,排除所有label有2的样本索引
+        # ##按照这些索引取,同时只取batchsize张
+        virtual_data = virtual_data[idx_1][:batch_size]
+        virtual_label = virtual_label[idx_1][:batch_size]
+
+        # True为训练ae生成虚假样本,False为用ae生成的虚假样本进行压制训练
+        if train_generate == True:
+            # 训练生成虚假样本,我们虚假样本的标签设置为
+            virtual_label = virtual_label - 0.1  # [-0.1,-0.1,0.9,0.9....,-0.1]
+            virtual_label = virtual_label.float()
+        else:
+            # 如果为压制训练,则virtual_laebl设置为都是0.1
+            virtual_label = (torch.ones([len(virtual_data), num_classes]) * 0.1).cuda()
+
+        virtual_data, virtual_label = virtual_data.detach(), virtual_label.detach()
+        print(virtual_data.shape, virtual_label.shape)
+        return virtual_data, virtual_label
 
     def generate_virtual_by_add(self, x):
         pass
@@ -851,6 +893,7 @@ class simple_discriminator(nn.Module):
     '''
     简单discriminator,源码没有接sigmoid,我尝试加sigmoid之后直接完蛋.
     '''
+
     def __init__(self):
         super(simple_discriminator, self).__init__()
         n_d_feature = 64

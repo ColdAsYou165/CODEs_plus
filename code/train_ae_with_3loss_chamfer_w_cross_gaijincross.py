@@ -1,7 +1,5 @@
 ''''
-3loss齐飞,训练ae生成虚假样本.其中,encoder之后的特征向量要detach一下.只更新decoder
-我得问下老师,后面decoder在学习中不就改变了吗为什么还会觉得依旧具有重构能力呢?还有语义 gan
-貌似是成了
+crossloss 标签为[-1,-1,1,1,-1,-1)
 '''
 import os
 import time
@@ -48,8 +46,8 @@ from models import resnet_orig
 
 # 起势
 name_args = get_args_str(args)
-name_project = f"train_ae_with3loss_chamfer_blend_w"
-results_root = f"../results/{name_project}/{name_args}"
+name_project = f"train_ae_with3loss_chamfer_blend_w_gaijincross"
+results_root = f"../results/{name_project}/label0.9-0.1{name_args}"
 os.makedirs(results_root, exist_ok=True)
 file = open(results_root + "/args.txt", "w")
 file.write(f"{args}")
@@ -59,7 +57,7 @@ results_pth_root = results_root + "/pth"
 os.makedirs(results_pic_root, exist_ok=True)
 os.makedirs(results_pth_root, exist_ok=True)
 writer = SummaryWriter()
-writer.add_text("实验描述", f"3loss齐飞,chamferloss and wloss and crossloss,{args}")
+writer.add_text("实验描述", f"train_ae_with3loss_chamfer_blend_w_gaijincross,{args}")
 
 # 数据集
 
@@ -82,7 +80,6 @@ model_g = AutoEncoder_Miao().cuda()
 model_g.apply(weights_init)
 state_g = torch.load("../betterweights/ae_miao_trainedbybclloss--epoch496--loss0.0006234363307940621.pth")
 model_g.load_state_dict(state_g)
-
 
 model_d = resnet_orig.ResNet18(num_classes=10).cuda()
 state = torch.load("../betterweights/resnet18_baseline_trainedbymiao_acc0.9532.pth")
@@ -139,11 +136,12 @@ def ae(epoch):
 
         ##计算crossentropyloss
         pred_model_d = model_d(decoded)
-        virtual_label = F.one_hot(targets, num_classes) / 2
+        virtual_label = F.one_hot(targets, num_classes)
         index_0 = range(0, len(virtual_label), 2)
         index_1 = range(1, len(virtual_label), 2)
         virtual_label = virtual_label[index_0] + virtual_label[index_1]
-        virtual_label = virtual_label.detach()
+        virtual_label = virtual_label - 0.1  # [-1,-1,1,1....,-1]
+        virtual_label = virtual_label.detach().float()
         # print(pred_model_d.shape,pred_model_d.dtype,virtual_label.shape,virtual_label.dtype)
         loss_cross = criterion_blend(pred_model_d, virtual_label)
         loss_cross_all += loss_cross.item()

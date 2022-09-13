@@ -49,6 +49,6 @@ def downloade_LSUN():
 
 if __name__ == "__main__":
     pass
-    # downloadDatasets()  # 下载数据集
+    downloadDatasets()  # 下载数据集
     # chakantupian()
     # downloade_LSUN()
