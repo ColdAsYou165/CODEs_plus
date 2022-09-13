@@ -118,7 +118,8 @@ def ae(epoch):
         pred_dis_real = output.sigmoid()  # 观察量 dis对real的pred,问题是苗师兄里面接了mean
         pred_dis_real_all += pred_dis_real.item()
         # ##encoder之后先detach再decoder得到虚假图像
-        decoded = model_g.generate_virtual(inputs, set_encoded_detach=True)
+        decoded, virtual_label = model_g.generate_virtual(inputs, targets, set_encoded_detach=True, train_generate=True,
+                                                          num_classes=num_classes, scale_generate=2)
         output = discriminator(decoded.detach())  # 注意detach
         d_loss_fake = output
         d_loss_fake.backward(mone)  # fake为1
@@ -136,13 +137,7 @@ def ae(epoch):
 
         ##计算crossentropyloss
         pred_model_d = model_d(decoded)
-        virtual_label = F.one_hot(targets, num_classes)
-        index_0 = range(0, len(virtual_label), 2)
-        index_1 = range(1, len(virtual_label), 2)
-        virtual_label = virtual_label[index_0] + virtual_label[index_1]
-        virtual_label = virtual_label - 0.1  # [-1,-1,1,1....,-1]
-        virtual_label = virtual_label.detach().float()
-        # print(pred_model_d.shape,pred_model_d.dtype,virtual_label.shape,virtual_label.dtype)
+
         loss_cross = criterion_blend(pred_model_d, virtual_label)
         loss_cross_all += loss_cross.item()
         (loss_cross * args.blend_loss_weight).backward(retain_graph=True)
@@ -172,7 +167,8 @@ def ae(epoch):
     writer.add_scalar("chamfer_loss", loss_chamfer_all, epoch)
     writer.add_scalar("loss_cross", loss_cross_all, epoch)
     # 每个epoch生成并保存一张虚假图片
-    virtual_data = model_g.generate_virtual(origin_data, set_encoded_detach=True)
+    virtual_data,virtual_label = model_g.generate_virtual(origin_data, origin_label, set_encoded_detach=True, train_generate=True,
+                                            num_classes=num_classes, scale_generate=2)
     save_image(virtual_data, results_pic_root + f"/virpic_--epoch{epoch}--chamferloss{loss_chamfer_all:.3f}.jpg")
 
     # 保存模型权重

@@ -709,10 +709,11 @@ class AutoEncoder_Miao(nn.Module):
         index_1 = range(1, len(virtual_label), 2)
         virtual_label = virtual_label[index_0] + virtual_label[index_1]  # [0,1,1,0,...0]和[0,2,0,0...0]
         # ##排除相同类,就要在所有的索引中排除label有2的索引
-        idx_2 = torch.where(virtual_label == 2)[0].numpy()  # label有2,也就是相同类生成的虚假样本
+        idx_2 = torch.where(virtual_label == 2)[0].cpu().numpy()  # label有2,也就是相同类生成的虚假样本
         idx_all = np.arange(0, virtual_label.shape[0])
         idx_1 = np.setdiff1d(idx_all, idx_2)  # 取补集,排除所有label有2的样本索引
         # ##按照这些索引取,同时只取batchsize张
+        # virtual_data可不能detach,差点犯大错了
         virtual_data = virtual_data[idx_1][:batch_size]
         virtual_label = virtual_label[idx_1][:batch_size]
 
@@ -725,8 +726,8 @@ class AutoEncoder_Miao(nn.Module):
             # 如果为压制训练,则virtual_laebl设置为都是0.1
             virtual_label = (torch.ones([len(virtual_data), num_classes]) * 0.1).cuda()
 
-        virtual_data, virtual_label = virtual_data.detach(), virtual_label.detach()
-        print(virtual_data.shape, virtual_label.shape)
+        virtual_label = virtual_label.detach()
+        # print(virtual_data, virtual_label)
         return virtual_data, virtual_label
 
     def generate_virtual_by_add(self, x):
