@@ -10,7 +10,7 @@ parser.add_argument("--lr_g", type=float, default=0.0002, help="model_g的lr")
 parser.add_argument('--lr_dis', type=float, default=0.0002, help='wgan discrinator lr, default=0.0002')
 parser.add_argument('--lr_scale', type=float, default=1e4, help='wgan discrinator lr, default=0.0002')
 parser.add_argument("--optimizer", default="Adam", help="Adam SGD")
-parser.add_argument("--epochs", type=int, default=300)
+parser.add_argument("--epochs", type=int, default=500)
 parser.add_argument("--gpus", default="0")
 ###苗师兄batchsize为32,我记得之前实验就是bacthsize小点效果好,有时间再验证.之前我一直设置的为128
 parser.add_argument("--batch_size", type=int, default=128)
@@ -46,7 +46,10 @@ from models import resnet_orig
 
 # 起势
 name_args = get_args_str(args)
-name_project = f"train_ae_with3loss_chamfer_blend_w_gaijincross"
+# 没有v的是存在由相同两类生成虚假样本的错误
+# v1目前已经纠正由相同两类生成虚假样本的错误
+# v2 v1不行,试试v2,scale改成1
+name_project = f"train_ae_with3loss_chamfer_blend_w_gaijincross_v2"
 results_root = f"../results/{name_project}/label0.9-0.1{name_args}"
 os.makedirs(results_root, exist_ok=True)
 file = open(results_root + "/args.txt", "w")
@@ -119,7 +122,7 @@ def ae(epoch):
         pred_dis_real_all += pred_dis_real.item()
         # ##encoder之后先detach再decoder得到虚假图像
         decoded, virtual_label = model_g.generate_virtual(inputs, targets, set_encoded_detach=True, train_generate=True,
-                                                          num_classes=num_classes, scale_generate=2)
+                                                          num_classes=num_classes, scale_generate=1)
         output = discriminator(decoded.detach())  # 注意detach
         d_loss_fake = output
         d_loss_fake.backward(mone)  # fake为1
@@ -167,8 +170,9 @@ def ae(epoch):
     writer.add_scalar("chamfer_loss", loss_chamfer_all, epoch)
     writer.add_scalar("loss_cross", loss_cross_all, epoch)
     # 每个epoch生成并保存一张虚假图片
-    virtual_data,virtual_label = model_g.generate_virtual(origin_data, origin_label, set_encoded_detach=True, train_generate=True,
-                                            num_classes=num_classes, scale_generate=2)
+    virtual_data, virtual_label = model_g.generate_virtual(origin_data, origin_label, set_encoded_detach=True,
+                                                           train_generate=True,
+                                                           num_classes=num_classes, scale_generate=1)
     save_image(virtual_data, results_pic_root + f"/virpic_--epoch{epoch}--chamferloss{loss_chamfer_all:.3f}.jpg")
 
     # 保存模型权重

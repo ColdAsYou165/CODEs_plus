@@ -694,8 +694,8 @@ class AutoEncoder_Miao(nn.Module):
             newlabel = label[idx]
             data_all.append(newdata)
             label_all.append(newlabel)
-        data = torch.concat(data_all, dim=0).detach()
-        label = torch.concat(label_all, dim=0).detach()
+        data = torch.concat(data_all, dim=0).clone()
+        label = torch.concat(label_all, dim=0).clone()
         # 虚假样本
         z = self.encoder(data)  # [batch, 64, 8, 8]
         z = z.reshape(-1, z.shape[1] * 2, z.shape[2], z.shape[3])
