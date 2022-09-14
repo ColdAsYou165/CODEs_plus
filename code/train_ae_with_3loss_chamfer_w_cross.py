@@ -2,6 +2,8 @@
 3loss齐飞,训练ae生成虚假样本.其中,encoder之后的特征向量要detach一下.只更新decoder
 我得问下老师,后面decoder在学习中不就改变了吗为什么还会觉得依旧具有重构能力呢?还有语义 gan
 貌似是成了
+---
+版本老了,目前还没改
 '''
 import os
 import time

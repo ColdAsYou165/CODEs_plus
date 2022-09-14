@@ -10,10 +10,10 @@ parser.add_argument("--lr_g", type=float, default=0.0002, help="model_g的lr")
 parser.add_argument('--lr_dis', type=float, default=0.0002, help='wgan discrinator lr, default=0.0002')
 parser.add_argument('--lr_scale', type=float, default=1e4, help='wgan discrinator lr, default=0.0002')
 parser.add_argument("--optimizer", default="Adam", help="Adam SGD")
-parser.add_argument("--epochs", type=int, default=500)
+parser.add_argument("--epochs", type=int, default=1800)
 parser.add_argument("--gpus", default="0")
 ###苗师兄batchsize为32,我记得之前实验就是bacthsize小点效果好,有时间再验证.之前我一直设置的为128
-parser.add_argument("--batch_size", type=int, default=128)
+parser.add_argument("--batch_size", type=int, default=128, help="苗师兄默认128")
 # wgan的 discriminator
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 parser.add_argument('--w_loss_weight', type=float, default=1e-5, help='wloss上加的权重,苗师兄wgan是1e-5')
@@ -49,8 +49,11 @@ name_args = get_args_str(args)
 # 没有v的是存在由相同两类生成虚假样本的错误
 # v1目前已经纠正由相同两类生成虚假样本的错误
 # v2 v1不行,试试v2,scale改成1
-name_project = f"train_ae_with3loss_chamfer_blend_w_gaijincross_v2"
-results_root = f"../results/{name_project}/label0.9-0.1{name_args}"
+# 从此刻开始,都是1600轮,不要自以为是了,我就是个傻逼啊.
+# v3是 -0.1 0.9 0.9 ,-0.1...这种label
+# v4是 0 0 0 0.5,0.5 0 0 ...这种label
+name_project = f"train_ae_with3loss_chamfer_blend_w_gaijincross_v4"
+results_root = f"../results/{name_project}/{name_args}"
 os.makedirs(results_root, exist_ok=True)
 file = open(results_root + "/args.txt", "w")
 file.write(f"{args}")

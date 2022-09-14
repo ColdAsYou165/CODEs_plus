@@ -244,30 +244,57 @@
 #sleep 60
 #python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 7 --batch_size 128 --blend_loss_weight 1e-13 &
 
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 0 --batch_size 128 --blend_loss_weight 1e-1 &
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 0 --batch_size 128 --blend_loss_weight 1e-1 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 1 --batch_size 128 --blend_loss_weight 1e-2 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --batch_size 128 --blend_loss_weight 1e-3 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 3 --batch_size 128 --blend_loss_weight 1e-4 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 4 --batch_size 128 --blend_loss_weight 1e-5 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 5 --batch_size 128 --blend_loss_weight 1e-6 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 6 --batch_size 128 --blend_loss_weight 1e-7 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 7 --batch_size 128 --blend_loss_weight 1e-8 &
+#sleep 60
+#wait
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 0 --batch_size 32 --blend_loss_weight 1e-1 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 1 --batch_size 32 --blend_loss_weight 1e-3 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --batch_size 32 --blend_loss_weight 1e-4 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 6 --batch_size 32 --blend_loss_weight 1e-5 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 7 --batch_size 32 --blend_loss_weight 1e-8 &
+#sleep 60
+
+#python train_resnet_byvirtual.py --gpus 7 --ae_version 2 --loss_virtual_weight 1e-5 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 3 --ae_version 3 --loss_virtual_weight 1e-5 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 4 --ae_version 4 --loss_virtual_weight 1e-5 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 6 --ae_version 2 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 0 --ae_version 3 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 5 --ae_version 4 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 2 --ae_version 3 --loss_virtual_weight 1e-5 --batch_size 32 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 1 --ae_version 4 --loss_virtual_weight 1e-3 --batch_size 32 &
+#sleep 60
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --blend_loss_weight 1 &
 sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 1 --batch_size 128 --blend_loss_weight 1e-2 &
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 3 --blend_loss_weight 1e-3 &
 sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --batch_size 128 --blend_loss_weight 1e-3 &
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 1 --blend_loss_weight 1e-5 &
 sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 3 --batch_size 128 --blend_loss_weight 1e-4 &
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 4 --blend_loss_weight 1e-6 &
 sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 4 --batch_size 128 --blend_loss_weight 1e-5 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 5 --batch_size 128 --blend_loss_weight 1e-6 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 6 --batch_size 128 --blend_loss_weight 1e-7 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 7 --batch_size 128 --blend_loss_weight 1e-8 &
-sleep 60
-wait
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 0 --batch_size 32 --blend_loss_weight 1e-1 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 1 --batch_size 32 --blend_loss_weight 1e-3 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --batch_size 32 --blend_loss_weight 1e-4 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 6 --batch_size 32 --blend_loss_weight 1e-5 &
-sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 7 --batch_size 32 --blend_loss_weight 1e-8 &
+python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 5 --blend_loss_weight 1e-5 --lr_scale 1e4 &
 sleep 60

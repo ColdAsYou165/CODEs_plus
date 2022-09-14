@@ -674,35 +674,30 @@ class AutoEncoder_Miao(nn.Module):
         x = self.ct8(x)
         return x
 
-    def generate_virtual(self, data, label, set_encoded_detach, train_generate, num_classes=10, scale_generate=2):
+    def generate_virtual(self, data, label, set_encoded_detach, train_generate, num_classes=10, scale_generate=1):
         '''
         生成虚假样本
         :param data:
         :param label:
         :param set_encoded_detach: encode之后detach一下,意思是不更新encoder的权重
         :param train_generate:是否为训练生成虚假样本,True则标签为[0.5,0.5,...] False则label都为0.1
-        :param scale_generate: 多少个0.5倍的虚假样本
+        :param scale_generate: 虚假样本相对于正常样本的倍数,这个就锁死跟正常样本等量得了
         :param num_classes: 样本种类数
         :return: virtual_data,virtual_label
         '''
-        data_all = []
-        label_all = []
+        scale_generate = int(scale_generate * 2)  # 需要多少个0.5倍
         batch_size = int(data.shape[0] * (scale_generate * 0.5))
-        for i in range(scale_generate + 1):
-            idx = torch.randperm(data.shape[0])
-            newdata = data[idx]
-            newlabel = label[idx]
-            data_all.append(newdata)
-            label_all.append(newlabel)
-        data = torch.concat(data_all, dim=0).clone()
-        label = torch.concat(label_all, dim=0).clone()
+        data = data.repeat_interleave(scale_generate + 1, dim=0)
+        label = label.repeat_interleave(scale_generate + 1, dim=0)
+        idx = torch.randperm(data.shape[0])
+        data = data[idx].detach()
+        label = label[idx].detach()
         # 虚假样本
         z = self.encoder(data)  # [batch, 64, 8, 8]
         z = z.reshape(-1, z.shape[1] * 2, z.shape[2], z.shape[3])
         if set_encoded_detach:
             z = z.detach()
         virtual_data = self.decoder_virtual(z)
-
         # 虚假标签
         virtual_label = F.one_hot(label, num_classes)
         index_0 = range(0, len(virtual_label), 2)
@@ -716,18 +711,17 @@ class AutoEncoder_Miao(nn.Module):
         # virtual_data可不能detach,差点犯大错了
         virtual_data = virtual_data[idx_1][:batch_size]
         virtual_label = virtual_label[idx_1][:batch_size]
-
         # True为训练ae生成虚假样本,False为用ae生成的虚假样本进行压制训练
         if train_generate == True:
             # 训练生成虚假样本,我们虚假样本的标签设置为
-            virtual_label = virtual_label - 0.1  # [-0.1,-0.1,0.9,0.9....,-0.1]
+            # virtual_label = virtual_label -0.1   # [0,0,1,1,0,0...,0] -> [-0.1,-0.1,0.9,0.9....,-0.1]
+            virtual_label = virtual_label * 0.5  # [0,0,1,1,0,0...,0] -> [0 0 0.5,0.5,0,0]
             virtual_label = virtual_label.float()
         else:
             # 如果为压制训练,则virtual_laebl设置为都是0.1
             virtual_label = (torch.ones([len(virtual_data), num_classes]) * 0.1).cuda()
 
         virtual_label = virtual_label.detach()
-        # print(virtual_data, virtual_label)
         return virtual_data, virtual_label
 
     def generate_virtual_by_add(self, x):
@@ -936,3 +930,8 @@ if __name__ == "__main__":
     x=torch.randn([32,3,32,32])
     y=model(x).reshape(-1)
     print(y.shape)'''
+    model = AutoEncoder_Miao().cuda()
+    x = torch.randn([4, 3, 28, 28]).cuda()
+    y = torch.tensor([1, 1, 1, 1]).cuda()
+    a, b = model.generate_virtual(x, y, True, True)
+    print(b)

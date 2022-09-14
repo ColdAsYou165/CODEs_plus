@@ -35,8 +35,9 @@ print(a[:10])'''
 '''a=13
 a=int(a*0.5*2)
 print(a)'''
+
 num_classes = 10
-batch_size = 4
+batch_size = 128
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 trainset = torchvision.datasets.CIFAR10(root="../data/cifar10", train=True, download=False,
                                         transform=transform_train_cifar_miao)
@@ -50,9 +51,8 @@ model = AutoEncoder_Miao().cuda()
 for data, label in trainloader:
     data = data.cuda()
     label = label.cuda()
-    virtual_data, virtual_label = model.generate_virtual(data, label, set_encoded_detach=True, train_generate=True,
-                                                         num_classes=num_classes, scale_generate=1)
-    print(virtual_data.shape, virtual_label.shape)
-    print(label)
-    print("---")
-    print(virtual_label)
+    data,label=model.generate_virtual(data,label,True,True)
+
+'''a=torch.randn([4,3,28,28])
+b=a.repeat_interleave(3,dim=0)
+print(b.shape)'''
