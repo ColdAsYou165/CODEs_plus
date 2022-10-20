@@ -1,5 +1,5 @@
 ''''
-v1在老师基础上使用索引方法写的
+v3老师的想法,将父母label相同的loss变成0
 '''
 import os
 import time
@@ -54,7 +54,7 @@ name_args = get_args_str(args)
 # v4是 0 0 0 0.5,0.5 0 0 ...这种label
 # v5 是v4基础上跑满epoch  失败了 取消了
 # train_ae_with3loss_chamfer_blend_w_gaijingenerate_v1 使用generate_virtual_v1方法生成虚假样本,不知道速度会不会块
-name_project = f"train_ae_with3loss_chamfer_blend_w_gaijingenerate_v1"
+name_project = f"train_ae_with_3loss_generatev3_v1"
 results_root = f"../results/{name_project}/{name_args}"
 os.makedirs(results_root, exist_ok=True)
 file = open(results_root + "/args.txt", "w")
@@ -86,7 +86,8 @@ discriminator.apply(weights_init)
 model_g = AutoEncoder_Miao().cuda()
 
 model_g.apply(weights_init)
-state_g = torch.load("../betterweights/ae_miao_trainedbybclloss--epoch496--loss0.0006234363307940621.pth")
+root_ae_1 = "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with_mseloss_v3/args--lr0.0006/pth/ae_miao_trainedbybclloss--epoch499--loss0.000613753743546343.pth"
+state_g = torch.load(root_ae_1)
 model_g.load_state_dict(state_g)
 
 model_d = resnet_orig.ResNet18(num_classes=10).cuda()
@@ -126,7 +127,7 @@ def ae(epoch):
         pred_dis_real = output.sigmoid()  # 观察量 dis对real的pred,问题是苗师兄里面接了mean
         pred_dis_real_all += pred_dis_real.item()
         # ##encoder之后先detach再decoder得到虚假图像
-        decoded, virtual_label = model_g.generate_virtual_v1(inputs, targets, set_encoded_detach=True,
+        decoded, virtual_label = model_g.generate_virtual_v3(inputs, targets, set_encoded_detach=True,
                                                              train_generate=True, num_classes=num_classes)
         output = discriminator(decoded.detach())  # 注意detach
         d_loss_fake = output
@@ -175,7 +176,7 @@ def ae(epoch):
     writer.add_scalar("chamfer_loss", loss_chamfer_all, epoch)
     writer.add_scalar("loss_cross", loss_cross_all, epoch)
     # 每个epoch生成并保存一张虚假图片
-    virtual_data, virtual_label = model_g.generate_virtual_v1(origin_data, origin_label, set_encoded_detach=True,
+    virtual_data, virtual_label = model_g.generate_virtual_v3(origin_data, origin_label, set_encoded_detach=True,
                                                               train_generate=True, num_classes=num_classes)
     save_image(virtual_data, results_pic_root + f"/virpic_--epoch{epoch}--chamferloss{loss_chamfer_all:.3f}.jpg")
 

@@ -315,5 +315,59 @@ def make_result_dir(root_result="../results/noname"):
     return root_result, root_result_pth, root_result_pic
 
 
+def getLogger(formatter_str=None, root_filehandler=None):
+    '''
+    返回logger
+    :param formatter_str: formatter要加的内容
+    :param root_filehandler: filehandler的位置
+    :return:
+    '''
+    import logging
+    logger = logging.getLogger(__name__)
+    # 之后假的handler的level只能比logger的高
+    logger.setLevel(level=logging.DEBUG)
+    if formatter_str == None:
+        formatter = logging.Formatter(f'%(message)s')
+    elif formatter_str == "std":
+        formatter = logging.Formatter(f'%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    else:
+        formatter = logging.Formatter(
+            f'----------\r\n{formatter_str}%(asctime)s:\r\n %(message)s')
+    if root_filehandler != None:
+        filehandler = logging.FileHandler(root_filehandler, encoding="utf-8")
+        filehandler.setFormatter(formatter)
+        filehandler.setLevel(logging.INFO)
+        logger.addHandler(filehandler)
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setLevel(logging.DEBUG)
+    stream_handler.setFormatter(formatter)
+
+    logger.addHandler(stream_handler)
+    return logger
+
+
+def getResultDir(name_project, name_args, results_root=f"../results"):
+    '''
+
+    :param name_project:
+    :param name_args:
+    :param results_root:
+    :return:
+    '''
+    # name_project = f"ae_containy_reconstruct_v1"
+    # name_args = get_args_str(args)
+    results_root = f"{results_root}/{name_project}/{name_args}"
+    os.makedirs(results_root, exist_ok=True)
+    file = open(results_root + "/args.txt", "w")
+    file.write(f"{name_args}")
+    file.close()
+    results_pic_root = results_root + "/pic"
+    results_pth_root = results_root + "/pth"
+    os.makedirs(results_pic_root, exist_ok=True)
+    os.makedirs(results_pth_root, exist_ok=True)
+    return results_root, (results_pth_root, results_pic_root)
+
+
 if __name__ == "__main__":
     pass

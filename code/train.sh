@@ -288,13 +288,219 @@
 #sleep 60
 #python train_resnet_byvirtual.py --gpus 1 --ae_version 4 --loss_virtual_weight 1e-3 --batch_size 32 &
 #sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --blend_loss_weight 1 &
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --blend_loss_weight 1 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 3 --blend_loss_weight 1e-3 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 1 --blend_loss_weight 1e-5 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 4 --blend_loss_weight 1e-6 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 5 --blend_loss_weight 1e-5 --lr_scale 1e4 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 7 --blend_loss_weight 1e-5 --lr_scale 1e4 --lr_dis 0 &
+#python train_resnet_byvirtual.py --gpus 0 --ae_version 5 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 1 --ae_version 5 --loss_virtual_weight 1e-1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 2 --ae_version 5 --loss_virtual_weight 1e-2 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 3 --ae_version 5 --loss_virtual_weight 1e-3 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 4 --ae_version 5 --loss_virtual_weight 1e-4 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 5 --ae_version 5 --loss_virtual_weight 1e-5 &
+#wait
+#
+#
+#python train_resnet_byvirtual.py --gpus 0 --ae_version 7 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 1 --ae_version 7 --loss_virtual_weight 1e-1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 2 --ae_version 7 --loss_virtual_weight 1e-2 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 3 --ae_version 7 --loss_virtual_weight 1e-3 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 4 --ae_version 7 --loss_virtual_weight 1e-4 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 5 --ae_version 7 --loss_virtual_weight 1e-5 &
+#wait
+#
+#
+#python train_resnet_byvirtual.py --gpus 0 --ae_version 6 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 1 --ae_version 6 --loss_virtual_weight 1e-1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 2 --ae_version 6 --loss_virtual_weight 1e-2 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 3 --ae_version 6 --loss_virtual_weight 1e-3 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 4 --ae_version 6 --loss_virtual_weight 1e-4 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 5 --ae_version 6 --loss_virtual_weight 1e-5 &
+#wait
+b=9
+#python train_resnet_byvirtual.py --gpus 0 --ae_version $a --loss_virtual_weight 0.005 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 1 --ae_version $a --loss_virtual_weight 0.0045 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 2 --ae_version $a --loss_virtual_weight 0.004 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 3 --ae_version $a --loss_virtual_weight 0.0035 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 4 --ae_version $a --loss_virtual_weight 0.003 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 5 --ae_version $a --loss_virtual_weight 0.0025 &
+#sleep 60
+
+##wait
+#python train_resnet_byvirtual.py --gpus 5 --ae_version $b --loss_virtual_weight 0.002 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 1 --ae_version $b --loss_virtual_weight 0.0015 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 2 --ae_version $b --loss_virtual_weight 0.001 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 3 --ae_version $b --loss_virtual_weight 0.002 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 4 --ae_version $b --loss_virtual_weight 0.0015 &
+#sleep 60
+##python train_resnet_byvirtual.py --gpus 5 --ae_version $b --loss_virtual_weight 0.001 &
+#a=9
+#python train_resnet_byvirtual.py --gpus 0 --ae_version $a --loss_virtual_weight 0.0035 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 1 --ae_version $a --loss_virtual_weight 0.003 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 2 --ae_version $a --loss_virtual_weight 0.0025 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 3 --ae_version $a --loss_virtual_weight 0.002 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 4 --ae_version $a --loss_virtual_weight 0.0015 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 5 --ae_version $a --loss_virtual_weight 0.001 &
+#sleep 60
+#wait
+#python train_resnet_byvirtual.py --gpus 0 --ae_version $a --loss_virtual_weight 0.0035 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 1 --ae_version $a --loss_virtual_weight 0.003 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 2 --ae_version $a --loss_virtual_weight 0.0025 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 3 --ae_version $a --loss_virtual_weight 0.002 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 4 --ae_version $a --loss_virtual_weight 0.0015 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 5 --ae_version $a --loss_virtual_weight 0.001 &
+#sleep 60
+#wait
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 2 --blend_loss_weight 1e-4 &
+#sleep 60
+#python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 3 --blend_loss_weight 1e-6 &
+#sleep 60
+#python train_ae_with_3loss_generatev2.py --gpus 4 --blend_loss_weight 1e-4 &
+#sleep 60
+#python train_ae_with_3loss_generatev2.py --gpus 5 --blend_loss_weight 1e-6 &
+#python train_ae_with_3loss_generatev3.py --gpus 1 --blend_loss_weight 1e-4 &
+#sleep 60
+#python train_ae_with_3loss_generatev3.py --gpus 2 --blend_loss_weight 1e-6 &
+#sleep 60
+#python train_ae_with_3loss_generatev3.py --gpus 3 --lr_g 0.00006 --lr_dis 0.00006 &
+#sleep 60
+#python train_ae_with_3loss_generatev3.py --gpus 6 --lr_g 0.00006 --lr_dis 0.00006 --blend_loss_weight 1e-4 &
+#python train_ae_with_3loss_generatev3.py --gpus 7 --lr_g 0.00006 --lr_dis 0.00006 --blend_loss_weight 1e-6 &
+#python train_ae_with_3loss_generatev2.py --gpus 5 &
+#python train_ae_with_3loss_generatev2.py --gpus 4 --blend_loss_weight 1e-5 &
+
+#python train_ae_with_3loss_generatev2.py --gpus 0 --w_loss_weight 1e-7 &
+#sleep 60
+#python train_ae_with_3loss_generatev2.py --gpus 1 --w_loss_weight 1e-9 &
+#sleep 60
+#python train_resnet_byvirtual_generatev2.py --gpus 2 --ae_version 0 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual_generatev2.py --gpus 3 --ae_version 0 --loss_virtual_weight 0.1 &
+#sleep 60
+#python train_resnet_byvirtual_generatev2.py --gpus 4 --ae_version 1 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual_generatev2.py --gpus 5 --ae_version 1 --loss_virtual_weight 0.1 &
+#wait
+#python train_resnet_byvirtual_generatev2.py --gpus 0 --ae_version 2 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual_generatev2.py --gpus 1 --ae_version 2 --loss_virtual_weight 0.1 &
+#sleep 60
+#python train_resnet_byvirtual_generatev2.py --gpus 2 --ae_version 3 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual_generatev2.py --gpus 3 --ae_version 3 --loss_virtual_weight 0.1 &
+#python train_ae_containy.py --gpus 0 --lr 0.06 &
+#sleep 60
+#python train_ae_containy.py --gpus 1 --lr 0.006 &
+#sleep 60
+#python train_ae_containy.py --gpus 2 --lr 0.0006 &
+#sleep 60
+#python train_ae_containy.py --gpus 3 --lr 0.00006 &
+#python train_ae_containy.py --gpus 5 --lr 0.00006 --lr_dis 0.00006 &
+#sleep 10
+#python train_ae_containy.py --gpus 1 --lr 0.0002 --lr_dis 0.0002 &
+#sleep 10
+#python train_ae_containy.py --gpus 2 --lr 0.00006 --lr_dis 0.0002 &
+#sleep 10
+#python train_ae_containy.py --gpus 3 --lr 0.00006 --lr_dis 0.00006 --blend_loss_weight 1 &
+#sleep 10
+#python train_ae_containy.py --gpus 4 --lr 0.00006 --lr_dis 0.00006 --blend_loss_weight 1e-3 &
+#wait
+#python train_ae_containy.py --gpus 0 --lr 0.00006 --lr_dis 0.00006 --blend_loss_weight 1e-5 &
+#sleep 10
+#python train_ae_containy.py --gpus 1 --lr 0.00006 --lr_dis 0.00006 --w_loss_weight 1 &
+#sleep 10
+#python train_ae_containy.py --gpus 2 --lr 0.00006 --lr_dis 0.00006 --w_loss_weight 1e-3 &
+#sleep 10
+#python train_ae_containy.py --gpus 3 --lr 0.00006 --lr_dis 0.00006 --w_loss_weight 1e-5 &
+#sleep 10
+#python train_ae_containy.py --gpus 4 --lr 0.0002 --lr_dis 0.0002 --w_loss_weight 1e-5 &
+#sleep 10
+#python train_ae_containy.py --gpus 5 --lr 0.0002 --lr_dis 0.0002 --w_loss_weight 1e-5 --blend_loss_weight 1e-3 &
+#python train_ae_containy.py --gpus 0 --lr 6e-5 --lr_dis 6e-5 &
+#sleep 10
+#python train_ae_containy.py --gpus 1 --lr 6e-5 --lr_dis 3e-5 &
+#sleep 10
+#
+#python train_ae_containy.py --gpus 3 --lr 2e-2 --lr_dis 2e-2 &
+#sleep 10
+#python train_ae_containy.py --gpus 4 --lr 2e-4 --lr_dis 2e-4 &
+#sleep 10
+#python train_ae_containy.py --gpus 5 --lr 2e-4 --lr_dis 1e-4 &
+#python train_ae_containy.py --gpus 0 --lr 0.00006 --lr_dis 0.00006 --w_loss_weight 1e-3 &
+#sleep 10
+#python train_ae_containy.py --gpus 1 --lr 0.00006 --lr_dis 0.00006 --w_loss_weight 1 &
+#sleep 10
+#python train_ae_containy.py --gpus 2 --lr 0.00006 --lr_dis 0.00006 --w_loss_weight 1e2 &
+#sleep 10
+#python train_ae_containy.py --gpus 3 --lr 0.00006 --lr_dis 0.00006 --w_loss_weight 1e3 &
+#sleep 10
+#python train_ae_containy.py --gpus 4 --lr 0.00006 --lr_dis 0.00006 --w_loss_weight 1e3 &
+#sleep 10
+#python train_ae_containy.py --gpus 5 --lr 0.0002 --lr_dis 0.0002 --w_loss_weight 1 &
+#python train_ae_containy.py --gpus 2 --lr 12e-5 --lr_dis 6e-5 &
+#sleep 10
+python train_resnet_byvirtual.py --gpus 0 --ae_version 12 --loss_virtual_weight 1 &
 sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 3 --blend_loss_weight 1e-3 &
+python train_resnet_byvirtual.py --gpus 1 --ae_version 12 --loss_virtual_weight 1e-1 &
 sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 1 --blend_loss_weight 1e-5 &
+python train_resnet_byvirtual.py --gpus 2 --ae_version 12 --loss_virtual_weight 1e-3 &
 sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 4 --blend_loss_weight 1e-6 &
+python train_resnet_byvirtual.py --gpus 3 --ae_version 12 --loss_virtual_weight 1e-5 &
+#
+python train_resnet_byvirtual.py --gpus 4 --ae_version 13 --loss_virtual_weight 1 &
 sleep 60
-python train_ae_with_3loss_chamfer_w_cross_gaijincross.py --gpus 5 --blend_loss_weight 1e-5 --lr_scale 1e4 &
+python train_resnet_byvirtual.py --gpus 5 --ae_version 13 --loss_virtual_weight 1e-1 &
 sleep 60
+python train_resnet_byvirtual.py --gpus 7 --ae_version 13 --loss_virtual_weight 1e-3 &
+sleep 60
+wait
+python train_resnet_byvirtual.py --gpus 0 --ae_version 13 --loss_virtual_weight 1e-5 &
+sleep 60
+python train_resnet_byvirtual.py --gpus 4 --ae_version 14 --loss_virtual_weight 1 &
+sleep 60
+python train_resnet_byvirtual.py --gpus 1 --ae_version 14 --loss_virtual_weight 1e-1 &
+sleep 60
+python train_resnet_byvirtual.py --gpus 2 --ae_version 14 --loss_virtual_weight 1e-3 &
+sleep 60
+python train_resnet_byvirtual.py --gpus 3 --ae_version 14 --loss_virtual_weight 1e-5 &

@@ -37,8 +37,9 @@ lr = args.lr
 # 不带v是有scheduler
 # v1为去掉 scheduler,还真就去了效果更好
 # v2 发现v1没训练完.在v1的基础上重新训练,增大epoch数,
-name_project = "train_ae_with_mseloss_v2"
-root_result = f"../results/{name_project}"
+# v3保留v2增加epoch数操作,固定学习率
+name_project = "train_ae_with_mseloss_v3"
+root_result = f"../results/{name_project}/args--lr{args.lr}"
 os.makedirs(root_result, exist_ok=True)
 root_pth = root_result + "/pth"
 root_pic = root_result + "/pic"
@@ -67,7 +68,7 @@ criterion_mse = torch.nn.MSELoss().cuda()
 criterion_bce = torch.nn.BCEWithLogitsLoss().cuda()  # github上用的这个
 model_g.apply(weights_init)
 optimizer = torch.optim.Adam(model_g.parameters(), lr=lr)
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 # 训练
 for epoch in range(epochs):
     model_g.train()

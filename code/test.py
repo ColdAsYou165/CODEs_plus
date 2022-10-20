@@ -121,13 +121,21 @@ def test_ae_reconstruct(model=AutoEncoder_Miao().cuda(), trainloader=trainloader
 
 
 def view_virtual(model=AutoEncoder_Miao().cuda(), root=""):
-    root="/mnt/data/maxiaolong/CODEsSp/results/train_ae_with3loss_chamfer_blend_w_gaijincross_v2/label0.9-0.1argslr_g0.0002--lr_dis0.0002--lr_scale10000.0--optimizer'Adam'--epochs500--gpus'3'--batch_size128--beta10.5--w_loss_weight1e-05--blend_loss_weight0.0001/pth/model_chamfer_and_wloss--epoch299.pth"
-    state=torch.load(root)["model"]
-    model.load_state_dict()
+    state_g = torch.load(
+        f"/mnt/data/maxiaolong/CODEsSp/results/train_ae_with_3loss_generatev3_v1/argslr_g6e-05--lr_dis6e-05--lr_scale10000.0--optimizer'Adam'--epochs1800--gpus'7'--batch_size128--beta10.5--w_loss_weight1e-05--blend_loss_weight1e-06/pth/model_chamfer_and_wloss--epoch199.pth")[
+        "model"]
+    os.makedirs("./pic", exist_ok=True)
+    model.load_state_dict(state_g)
+    for data, label in trainloader_cifar10:
+        data = data.cuda()
+        label = label.cuda()
+        virtual_data= model(data)
+        save_image(virtual_data, f"./pic/virtual_data,jpg")
+
 
 if __name__ == "__main__":
     pass
-    test_resnet_acc_and_mmc(model=model_resnet18, root="../betterweights/resnet18_baseline_trainedbymiao_acc0.9532.pth")
+    # test_resnet_acc_and_mmc(model=model_resnet18, root="../betterweights/resnet18_baseline_trainedbymiao_acc0.9532.pth")
     # test_ae_reconstruct(root="../betterweights/ae_miao_trainedbybclloss--epoch496--loss0.0006234363307940621.pth")
 
     view_virtual()

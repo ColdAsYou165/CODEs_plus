@@ -676,6 +676,7 @@ class AutoEncoder_Miao(nn.Module):
 
     def generate_virtual(self, data, label, set_encoded_detach, train_generate, num_classes=10, scale_generate=1):
         '''
+        附带设置父母类别种类不一样
         生成虚假样本
         :param data:
         :param label:
@@ -724,6 +725,115 @@ class AutoEncoder_Miao(nn.Module):
         virtual_label = virtual_label.detach()
         return virtual_data, virtual_label
 
+    def generate_virtual_v1(self, data, label, set_encoded_detach, train_generate, num_classes=10):
+        '''
+        v1版本生成虚假样本,按照老师说的方法,利用两个len(data)长度所索引,也不用在这里限制父母类别不同
+        应该在最后计算loss的时候将父母类别相同的loss设置为0就可以了,妙啊,老师太厉害了,我怎么就没想到呢
+        嗯...然后实际还是有所改动,不然压制训练的时候,还是会存在父母类别相同的问题
+        :return:
+        '''
+        index_0 = torch.randperm(len(data) * 2) % len(data)  # 多一倍的数量,因为label相同不要造成的损耗
+        index_1 = torch.randperm(len(data) * 2) % len(data)
+        index_notequal = label[index_0] != label[index_1]  # label不相同的索引
+        index_0 = index_0[index_notequal][:len(data)]  # 要label不相同的,并且,弱水三千只取一瓢
+        index_1 = index_1[index_notequal][:len(data)]  # 我太有才了
+        # 到这里index_0 index_1就算做好了
+        index_ji = range(1, len(data) * 2, 2)
+        index_ou = range(0, len(data) * 2, 2)
+        virtual_data = torch.zeros([data.shape[0] * 2, data.shape[1], data.shape[2], data.shape[3]]).cuda()
+        virtual_data[index_ou] = data[index_0]
+        virtual_data[index_ji] = data[index_1]
+        virtual_data = virtual_data.detach()  # 原始数据到这里就配对好了
+        label = F.one_hot(label, num_classes) * 0.5  # [0,0.5,0,...,0]
+        virtual_label = label[index_0] + label[index_1]  # 都为[0,0.5,0.5,0,0]
+
+        if train_generate == False:
+            virtual_label = (torch.ones_like(virtual_label) * 0.1).detach().cuda()
+        virtual_label = virtual_label.detach().cuda()
+
+        # 生成虚假样本
+        z = self.encoder(virtual_data)
+        # print(f"z.shape={z.shape}")
+        z = z.reshape(-1, z.shape[1] * 2, z.shape[2], z.shape[3])
+        if set_encoded_detach:
+            z = z.detach()
+        virtual_data = self.decoder_virtual(z)
+        # print(virtual_data.shape,label.shape)
+        # print(label)
+        return virtual_data, virtual_label
+
+    def generate_virtual_v3(self, data, label, set_encoded_detach, train_generate, num_classes=10):
+        '''
+        v1版本生成虚假样本,按照老师说的方法,利用两个len(data)长度所索引,也不用在这里限制父母类别不同
+        应该在最后计算loss的时候将父母类别相同的loss设置为0就可以了,妙啊,老师太厉害了,我怎么就没想到呢
+        嗯...然后实际还是有所改动,不然压制训练的时候,还是会存在父母类别相同的问题,那时候还是改label啊笨蛋
+        '''
+        index_0 = torch.randperm(len(data))
+        index_1 = torch.randperm(len(data))
+        index_equal = label[index_0] == label[index_1]  # label相同的索引
+
+        # 到这里index_0 index_1就算做好了
+        index_ji = range(1, len(data) * 2, 2)
+        index_ou = range(0, len(data) * 2, 2)
+        virtual_data = torch.zeros([data.shape[0] * 2, data.shape[1], data.shape[2], data.shape[3]]).cuda()
+        virtual_data[index_ou] = data[index_0]
+        virtual_data[index_ji] = data[index_1]
+        virtual_data = virtual_data.detach()  # 原始数据到这里就配对好了
+        label = F.one_hot(label, num_classes) * 0.5  # [0,0.5,0,...,0]
+        virtual_label = label[index_0] + label[index_1]  # 都为[0,0.5,0.5,0,0]
+        virtual_label = torch.where(virtual_label == 1, 0, virtual_label)
+        if train_generate == False:
+            # 压制训练,相同类的loss设置成0
+            virtual_label = (torch.ones_like(virtual_label) * 0.1).detach().cuda()
+            virtual_label[index_equal] = torch.zeros([1, num_classes]).cuda()
+        virtual_label = virtual_label.detach().cuda()
+
+        # 生成虚假样本
+        z = self.encoder(virtual_data)
+        # print(f"z.shape={z.shape}")
+        z = z.reshape(-1, z.shape[1] * 2, z.shape[2], z.shape[3])
+        if set_encoded_detach:
+            z = z.detach()
+        virtual_data = self.decoder_virtual(z)
+        # print(virtual_data.shape,label.shape)
+        # print(label)
+        return virtual_data, virtual_label
+
+    def generate_virtual_v2(self, data, label, set_encoded_detach, train_generate, num_classes=10):
+        '''
+        v2版本生成虚假样本,两个z和label乘以对应权重再相加
+        :return:
+        '''
+        index_0 = torch.randperm(len(data)).cuda()
+        index_1 = torch.randperm(len(data)).cuda()
+        if train_generate == True:
+            weight_0 = torch.rand([label.shape[0], 1]).cuda()
+        else:
+            # 压制训练的时候,两个类别的权重应该为0.4到0.6之间
+            weight_0 = torch.empty((label.shape[0], 1), dtype=torch.float32).uniform_(0.4, 0.6).cuda()
+            index_notequal = label[index_0] != label[index_1]
+            weight_0 = weight_0[index_notequal]
+            index_0 = index_0[index_notequal]
+            index_1 = index_1[index_notequal]
+        label = F.one_hot(label, num_classes)  # [0,1,0,...,0]
+        virtual_label = weight_0 * label[index_0] + (1 - weight_0) * label[index_1]
+
+        # 处理数据
+        z_0 = self.encoder(data[index_0])
+        z_1 = self.encoder(data[index_1])
+        if set_encoded_detach:
+            z_0 = z_0.detach()
+            z_1 = z_1.detach()
+
+        weight_0 = weight_0.reshape(-1, 1, 1, 1)
+        virtual_z = weight_0 * z_0 + (1 - weight_0) * z_1
+        virtual_data = self.decoder(virtual_z)
+
+        virtual_label = virtual_label.detach()
+        # print(virtual_data.shape, virtual_label.shape)
+        # print(virtual_data, virtual_label)
+        return virtual_data, virtual_label
+
     def generate_virtual_by_add(self, x):
         pass
 
@@ -731,6 +841,190 @@ class AutoEncoder_Miao(nn.Module):
         encoded = self.encoder(x)
         decoded = self.decoder(encoded)
         return decoded
+
+
+class AutoEncoder_Miao_containy(nn.Module):
+    '''
+    在苗师兄ae的基础上,借鉴FaderNetwork的思想,在decoder阶段加入y的标签
+    '''
+
+    def __init__(self, num_classes=10):
+        super(AutoEncoder_Miao_containy, self).__init__()
+        self.relu = nn.ReLU(inplace=True)
+        self.num_classes = num_classes
+        # 16 32 32
+        self.conv1 = nn.Sequential(nn.Conv2d(
+            in_channels=3,  # input height
+            out_channels=16,
+            kernel_size=3,  # filter size
+            stride=1,  # filter movement/step
+            padding=1), nn.LeakyReLU())
+        # 32 16 16
+        self.conv2 = nn.Sequential(nn.Conv2d(
+            in_channels=16,  # input height
+            out_channels=32,  # n_filters
+            kernel_size=3,  # filter size
+            stride=1,  # filter movement/step
+            padding=1,
+        ),
+            nn.LeakyReLU(),  # activation
+            nn.MaxPool2d(kernel_size=2))
+        # 32 16 16
+        self.conv3 = nn.Sequential(nn.Conv2d(
+            in_channels=32,  # input height
+            out_channels=32,  # n_filters
+            kernel_size=5,  # filter size
+            stride=1,  # filter movement/step
+            padding=2,
+        ),
+            nn.LeakyReLU())  # activation)
+        # 64 8 8
+        self.conv4 = nn.Sequential(nn.Conv2d(
+            in_channels=32,  # input height
+            out_channels=64,  # n_filters
+            kernel_size=5,  # filter size
+            stride=1,  # filter movement/step
+            padding=2,
+        ),
+            nn.LeakyReLU(),  # activation
+            nn.MaxPool2d(kernel_size=2))
+        # decoder
+        # 128 8 8 -> 32 16 16
+        self.ct0 = nn.Sequential(
+            nn.ConvTranspose2d(in_channels=128 + self.num_classes, out_channels=32, kernel_size=2, stride=2, padding=0),
+            nn.LeakyReLU())
+        # 64 8 8 -> 32 16 16
+        self.ct1 = nn.Sequential(nn.ConvTranspose2d(
+            in_channels=64 + self.num_classes,  # input height
+            out_channels=32,  # n_filters
+            kernel_size=2,  # filter size
+            stride=2,  # filter movement/step
+            padding=0,
+        ),
+            nn.LeakyReLU())
+        #
+        self.ct2 = nn.Sequential(nn.Conv2d(
+            in_channels=32 + self.num_classes,  # input height
+            out_channels=32,  # n_filters
+            kernel_size=5,  # filter size
+            stride=1,  # filter movement/step
+            padding=2,
+        ),
+            nn.LeakyReLU())
+        # -> 16 16 16
+        self.ct3 = nn.Sequential(nn.ConvTranspose2d(
+            in_channels=32 + self.num_classes,  # input height
+            out_channels=16,  # n_filters
+            kernel_size=5,  # filter size
+            stride=1,  # filter movement/step
+            padding=2,
+        ))
+        self.ct4 = nn.Sequential(nn.Conv2d(
+            in_channels=16 + self.num_classes,  # input height
+            out_channels=16,  # n_filters
+            kernel_size=5,  # filter size
+            stride=1,  # filter movement/step
+            padding=2,
+        ),
+            nn.LeakyReLU())
+        # ->16 32 32
+        self.ct5 = nn.Sequential(nn.ConvTranspose2d(
+            in_channels=16 + self.num_classes,  # input height
+            out_channels=16,  # n_filters
+            kernel_size=2,  # filter size
+            stride=2,  # filter movement/step
+            padding=0,
+        ),
+            nn.LeakyReLU())
+        self.ct6 = nn.Sequential(nn.Conv2d(
+            in_channels=16 + self.num_classes,  # input height
+            out_channels=16,  # n_filters
+            kernel_size=3,  # filter size
+            stride=1,  # filter movement/step
+            padding=1,
+        ),
+            nn.LeakyReLU())
+        # -> 3 32 32
+        self.ct7 = nn.Sequential(nn.ConvTranspose2d(
+            in_channels=16 + self.num_classes,  # input height
+            out_channels=3,  # n_filters
+            kernel_size=5,  # filter size
+            stride=1,  # filter movement/step
+            padding=2,
+        ),
+            nn.LeakyReLU())
+        self.ct8 = nn.Sequential(nn.Conv2d(
+            in_channels=3 + self.num_classes,  # input height
+            out_channels=3,  # n_filters
+            kernel_size=3,  # filter size
+            stride=1,  # filter movement/step
+            padding=1,
+        ), nn.Sigmoid())
+
+    def encoder(self, x):
+        x = self.conv1(x)  # 16,32,32
+        x = self.conv2(x)  # 32,16,16
+        x = self.conv3(x)  # 32,16,16
+        x = self.conv4(x)  # 64,8,8
+        return x
+
+    def decoder(self, x, y):
+        # 64,8,8 -> 3 28 28
+        if len(y.shape) == 1:
+            y = F.one_hot(y, self.num_classes)
+        assert y.shape == (x.shape[0], self.num_classes)
+        y = y.unsqueeze(2).unsqueeze(3)  # [n, num_classes, 1, 1]
+        for ct in [self.ct1, self.ct2, self.ct3, self.ct4, self.ct5, self.ct6, self.ct7, self.ct8]:
+            x = torch.concat([x, y.expand(-1, -1, x.shape[2], x.shape[3])], dim=1)
+            x = ct(x)
+        return x
+
+    def decoder_virtual(self, x, y):
+        # 128,8,8 -> 3 28 28
+        assert y.shape == (x.shape[0], self.num_classes)
+        y = y.unsqueeze(2).unsqueeze(3)  # [n, num_classes, 1, 1]
+        for ct in [self.ct0, self.ct2, self.ct3, self.ct4, self.ct5, self.ct6, self.ct7, self.ct8]:
+            x = torch.concat([x, y.expand(-1, -1, x.shape[2], x.shape[3])], dim=1)
+            x = ct(x)
+        return x
+
+    def forward(self, x, y):
+        '''
+        正常重构
+        :param x:
+        :param y:有无经过独热编码都可以
+        :return:
+        '''
+        encoded = self.encoder(x)
+        decoded = self.decoder(encoded, y)
+        return decoded
+
+    def generate_virtual(self, x, y, set_encode_detach=True, set_virtual_label_uniform=True):
+        '''
+        :param x:
+        :param y:未经过独热编码之前的y
+        :param set_encode_detach:
+        :param set_virtual_label_uniform:
+        :return:生成的虚假图像x和虚假label y
+        '''
+        x = self.encoder(x)
+        if set_encode_detach:
+            x = x.detach()
+
+        idx_0, idx_1 = torch.randperm(len(x)).cuda(), torch.randperm(len(x)).cuda()
+        idx_notequal = y[idx_0] != y[idx_1]
+        idx_0, idx_1 = idx_0[idx_notequal], idx_1[idx_notequal]
+        x = torch.concat([x[idx_0], x[idx_1]], dim=1)
+        # virtual_label
+        y_0 = F.one_hot(y[idx_0], self.num_classes).cuda()
+        y_1 = F.one_hot(y[idx_1], self.num_classes).cuda()
+        y = (y_0 + y_1) / 2.
+        if set_virtual_label_uniform:
+            y = (torch.ones_like(y) * 0.1).float().cuda()
+        y = y.detach()
+        # virtual_data
+        x = self.decoder_virtual(x, y)
+        return x, y
 
 
 class ResNet_sigmoid(nn.Module):
@@ -913,6 +1207,61 @@ class simple_discriminator(nn.Module):
         return x
 
 
+class Discriminator_FaderNet(nn.Module):
+    '''
+    借鉴Fadernet的思想,自己搭建一个同样用途的鉴别器
+    输入:encoded
+    结构:两层卷积两层全连接
+    '''
+
+    def __init__(self, in_channels, in_size):
+        super(Discriminator_FaderNet, self).__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channels, in_channels, 4, 2, 1),
+            nn.BatchNorm2d(in_channels),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout(0.3),
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(in_channels, in_channels, 4, 2, 1),
+            nn.BatchNorm2d(in_channels),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Dropout(0.3),
+        )
+        in_features = int(in_channels * in_size * in_size / 16)
+        self.proj_layers = nn.Sequential(
+            nn.Linear(in_features, in_features),
+            nn.LeakyReLU(0.2, inplace=True),
+            nn.Linear(in_features, 1),
+        )
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = x.reshape(x.shape[0], x.shape[1], -1)
+        x = x.reshape(x.shape[0], -1)
+        x = self.proj_layers(x)
+        # x = self.sigmoid(x)#这个应该也不接sigmoid的吧
+        return x
+
+
+def ex_ae_fadernet():
+    pass
+    num_classes = 10
+    model = AutoEncoder_Miao_containy(num_classes=10).cuda()
+    x = torch.rand([16, 3, 28, 28]).cuda()
+    y = torch.tensor([0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7]).cuda()
+    model.generate_virtual(x, y)
+
+
+def ex_dis():
+    model = discriminator_FaderNet(512, 4)
+    x = torch.rand([4, 512, 4, 4])
+    y = model(x)
+    print(y)
+
+
 if __name__ == "__main__":
     # test()
     # getResNet("1")
@@ -930,8 +1279,9 @@ if __name__ == "__main__":
     x=torch.randn([32,3,32,32])
     y=model(x).reshape(-1)
     print(y.shape)'''
-    model = AutoEncoder_Miao().cuda()
-    x = torch.randn([4, 3, 28, 28]).cuda()
-    y = torch.tensor([1, 1, 1, 1]).cuda()
-    a, b = model.generate_virtual(x, y, True, True)
-    print(b)
+    '''model = AutoEncoder_Miao()
+    data = torch.tensor([0, 1, 2, 3, 0]).reshape([5, 1, 1, 1]).float()
+    label = torch.tensor([0, 1, 2, 3, 0])
+    model.generate_virtual_v1(data, label, True, 4)'''
+    # ex_ae_fadernet()
+    ex_dis()

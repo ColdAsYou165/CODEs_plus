@@ -1,22 +1,19 @@
 '''
-描述: 使用训练好的ae压制训练
----
-说明:
-    老师说,兄严格按照苗师代码来.
-    epochs200 lr0.1以及后续调整策略 优化器
+文件目的 : 查看压制训练效果
+生成虚假样本的方法 : 按照权重将两个样本的特征向量加到一起再decoder
+描述 : 与genneratev2配套
 '''
 import os
 import time
 import argparse
 
 parser = argparse.ArgumentParser()
-# parser.add_argument("--method", default="")
 parser.add_argument("--epochs", type=int, default=200, help="这个就不调整了,就默认200")
 parser.add_argument("--gpus", default="0")
 parser.add_argument("--batch_size", type=int, default=128)
 parser.add_argument("--loss_virtual_weight", type=float, default=1, help="压制训练时候,loss_virtual的权重")
 # v5版本专用 选择ae参数
-parser.add_argument("--ae_version", type=int, default=5, help="ae权重版本,2为1e-8  3为1e-4 4为1e-5")
+parser.add_argument("--ae_version", type=int, default=0, help="ae权重版本,2为1e-8  3为1e-4 4为1e-5")
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
@@ -39,92 +36,44 @@ from utils import *
 
 # 起势
 print(str(args))
-name_runs = f"runs/oppress--ae_version{args.ae_version}--loss_weight{args.loss_virtual_weight}"
+name_runs = f"runs/yazhixunlian_genev2--ae_version{args.ae_version}--loss_weight{args.loss_virtual_weight}"
 writer = SummaryWriter(name_runs)
 writer.add_text("args", str(args))
-# v2观察 model567序号的 压制与效果
-# v4 使用的ae为containy的ae,训练1800轮,但是有时不能重构图像
-name_project = "train_resnet18_byvirtual_v4"
 name_args = get_args_str(args)
-results_root, (results_pth_root, results_pic_root) = getResultDir(name_project, name_args, results_root="../results")
+name_project = "train_resnet18_bygenev2"
+results_root = f"../results/{name_project}" + f"/{name_args}"
+os.makedirs(results_root, exist_ok=True)
+results_root_pic = results_root + "/pic"
+os.makedirs(results_root_pic, exist_ok=True)
+results_root_pth = results_root + "/pth"
+os.makedirs(results_root_pth, exist_ok=True)
 
 num_classes = 10
 # 模型
 model_d = resnet_orig.ResNet18(num_classes=num_classes).cuda()
 model_d.apply(weights_init)
 
-if args.ae_version < 12:
-    model_g = AutoEncoder_Miao().cuda()
-elif args.ae_version > 11:
-    model_g = AutoEncoder_Miao_containy().cuda()
-# model_g.apply(weights_init)
-# v5的state_g
-# 0,1为之前的两个,当时压制训练有一点效果,但是现在怀疑是那10%生成的正常样本带来的影响
-# 2为1e-8  3为1e-4 4为1e-5
-# 8为weight 1e-5 epoch 1199
-# 9 10 11 分别为ae--epoch1199 blendweight分别为 1e-5颜色正常 1e-5颜色深 1e-6
-# 12 13 14为 containy的ae,训练ae时候的blendweight分别为 1 1e-3 1e-5
+model_g = AutoEncoder_Miao().cuda()
+#
 if args.ae_version == 0:
-    state_g = torch.load(
-        f"../betterweights/ae_trained_by3loss_v0/ae_chamfer_and_wloss_and_crossloss--crossweight1e-4_epoch799.pth")[
-        "model"]
+    # closs+wloss+bloss1e-4
+    root_ae = "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with_3loss_generatev2_v1/argsbatch_size128--beta10.5--blend_loss_weight0.0001--epochs2000--gpus'4'--lr_dis6e-05--lr_g6e-05--lr_scale10000.0--optimizer'Adam'--w_loss_weight1e-05/pth/model_chamfer_and_wloss--epoch1999.pth"
+    state_g = torch.load(root_ae)["model"]
 elif args.ae_version == 1:
-    state_g = torch.load(
-        f"../betterweights/ae_trained_by3loss_v0/ae_chamfer_and_wloss_and_crossloss--crossweight1e-5_epoch799.pth")[
-        "model"]
+    # closs+wloss+bloss1e-5
+    root_ae = "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with_3loss_generatev2_v1/argsbatch_size128--beta10.5--blend_loss_weight1e-05--epochs2000--gpus'1'--lr_dis6e-05--lr_g6e-05--lr_scale10000.0--optimizer'Adam'--w_loss_weight1e-05/pth/model_chamfer_and_wloss--epoch1999.pth"
+    state_g = torch.load(root_ae)["model"]
 elif args.ae_version == 2:
-    state_g = torch.load(
-        "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with3loss_chamfer_blend_w_gaijincross_v2/label0.9-0.1argslr_g0.0002--lr_dis0.0002--lr_scale10000.0--optimizer'Adam'--epochs500--gpus'7'--batch_size128--beta10.5--w_loss_weight1e-05--blend_loss_weight1e-08/pth/model_chamfer_and_wloss--epoch299.pth")[
-        "model"]
+    # closs+wloss+bloss1e-6
+    root_ae = "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with_3loss_generatev2_v1/argsbatch_size128--beta10.5--blend_loss_weight1e-06--epochs2000--gpus'5'--lr_dis6e-05--lr_g6e-05--lr_scale10000.0--optimizer'Adam'--w_loss_weight1e-05/pth/model_chamfer_and_wloss--epoch1999.pth"
+    state_g = torch.load(root_ae)["model"]
 elif args.ae_version == 3:
-    state_g = torch.load(
-        "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with3loss_chamfer_blend_w_gaijincross_v2/label0.9-0.1argslr_g0.0002--lr_dis0.0002--lr_scale10000.0--optimizer'Adam'--epochs500--gpus'3'--batch_size128--beta10.5--w_loss_weight1e-05--blend_loss_weight0.0001/pth/model_chamfer_and_wloss--epoch299.pth")[
-        "model"]
-elif args.ae_version == 4:
-    state_g = torch.load(
-        "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with3loss_chamfer_blend_w_gaijincross_v2/label0.9-0.1argslr_g0.0002--lr_dis0.0002--lr_scale10000.0--optimizer'Adam'--epochs500--gpus'4'--batch_size128--beta10.5--w_loss_weight1e-05--blend_loss_weight1e-05/pth/model_chamfer_and_wloss--epoch299.pth")[
-        "model"]
-elif args.ae_version == 6:
-    # 699轮 blendlossweight为1e-6
-    state_g = torch.load(
-        "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with3loss_chamfer_blend_w_gaijincross_v4/argslr_g0.0002--lr_dis0.0002--lr_scale10000.0--optimizer'Adam'--epochs1800--gpus'4'--batch_size128--beta10.5--w_loss_weight1e-05--blend_loss_weight1e-06/pth/model_chamfer_and_wloss--epoch699.pth")[
-        "model"]
-elif args.ae_version == 5:
-    # 699轮 blendlossweight为1e-5
-    state_g = torch.load(
-        "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with3loss_chamfer_blend_w_gaijincross_v4/argslr_g0.0002--lr_dis0.0002--lr_scale10000.0--optimizer'Adam'--epochs1800--gpus'1'--batch_size128--beta10.5--w_loss_weight1e-05--blend_loss_weight1e-05/pth/model_chamfer_and_wloss--epoch699.pth")[
-        "model"]
-elif args.ae_version == 7:
-    # 199轮 blendlossweight为1e-5
-    state_g = torch.load(
-        "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with3loss_chamfer_blend_w_gaijincross_v4/argslr_g0.0002--lr_dis0.0002--lr_scale10000.0--optimizer'Adam'--epochs1800--gpus'1'--batch_size128--beta10.5--w_loss_weight1e-05--blend_loss_weight1e-05/pth/model_chamfer_and_wloss--epoch199.pth")[
-        "model"]
-elif args.ae_version == 8:
-    state_g = torch.load(
-        "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with3loss_chamfer_blend_w_gaijincross_v4/argslr_g0.0002--lr_dis0.0002--lr_scale10000.0--optimizer'Adam'--epochs1800--gpus'1'--batch_size128--beta10.5--w_loss_weight1e-05--blend_loss_weight1e-05/pth/model_chamfer_and_wloss--epoch1199.pth")[
-        "model"]
-elif args.ae_version == 9:
-    state_g = \
-        torch.load("../betterweights/ae_trainedby3loss/ae_miao_3loss_chamfer__w_blend1e-5--epoch1199--yansenormal.pth")[
-            "model"]
-elif args.ae_version == 10:
-    state_g = \
-        torch.load("../betterweights/ae_trainedby3loss/ae_miao_3loss_chamfer__w_blend1e-5--epoch1199--yanseshen.pth")[
-            "model"]
-elif args.ae_version == 11:
-    state_g = torch.load("../betterweights/ae_trainedby3loss/ae_miao_3loss_chamfer__w_blend1e-6--epoch1199.pth")[
-        "model"]
-elif args.ae_version == 12:
-    state_g = torch.load(
-        "/mnt/data/maxiaolong/CODEsSp/results/ae_containy_generatevirtual_v2_w1/argsbatch_size128--beta10.5--blend_loss_weight1.0--epochs1800--gpus'0'--lr6e-05--lr_dis6e-05--method'train_generate_virtual'--w_loss_weight1/pthae_generatevirtual--epoch1799.pth")
-elif args.ae_version == 13:
-    state_g = torch.load(
-        "/mnt/data/maxiaolong/CODEsSp/results/ae_containy_generatevirtual_v2_w1/argsbatch_size128--beta10.5--blend_loss_weight0.001--epochs1800--gpus'1'--lr6e-05--lr_dis6e-05--method'train_generate_virtual'--w_loss_weight1/pthae_generatevirtual--epoch1799.pth")
-elif args.ae_version == 14:
-    state_g = torch.load(
-        "/mnt/data/maxiaolong/CODEsSp/results/ae_containy_generatevirtual_v2_w1/argsbatch_size128--beta10.5--blend_loss_weight1e-05--epochs1800--gpus'2'--lr6e-05--lr_dis6e-05--method'train_generate_virtual'--w_loss_weight1/pthae_generatevirtual--epoch1799.pth")
+    # wloss+bloss1
+    root_ae = "/mnt/data/maxiaolong/CODEsSp/results/train_ae_with_3loss_generatev2_v2/argslr_g6e-05--lr_dis6e-05--lr_scale10000.0--optimizer'Adam'--epochs2000--gpus'5'--batch_size128--beta10.5--w_loss_weight1e-05--blend_loss_weight1/pth/model_chamfer_and_wloss--epoch1999.pth"
+    state_g = torch.load(root_ae)["model"]
 model_g.load_state_dict(state_g)
 model_g.eval()
+# optimizer_d = torch.optim.Adam(model_d.parameters(), lr=args.lr)#
 
 # 数据集
 cifar10_train = torchvision.datasets.CIFAR10(root="../data/cifar10", train=True, download=False,
@@ -151,7 +100,7 @@ trainloader_svhn = torch.utils.data.DataLoader(svhn_train, batch_size=args.batch
 testloader_svhn = torch.utils.data.DataLoader(svhn_test, batch_size=args.batch_size, shuffle=True, num_workers=2)
 
 # 优化器
-criterion_cross = torch.nn.CrossEntropyLoss().cuda()
+criterion = torch.nn.CrossEntropyLoss().cuda()
 lr = 1e-1
 optimizer_d = torch.optim.SGD(model_d.parameters(), lr=lr, momentum=0.9, weight_decay=5e-4)  # 苗lr0.1
 # 记录起初的mmc
@@ -166,7 +115,6 @@ print(f"压制训练前:acc:{acc},mmc_cifar100={mmc_cifar100},mmc_svhn={mmc_svhn
 # 压制训练
 acc_std = 0.80
 num_classes = 10
-
 for epoch in range(args.epochs):
     # lr 2e-2 提高的多 但是只能到0.86
     # 苗调整学习率
@@ -188,12 +136,13 @@ for epoch in range(args.epochs):
         label_normal = F.one_hot(label, num_classes).detach().float()
         # data_virtual = model_g.module.generate_virtual(data).detach()
         # 压制训练时候,虚假样本的label应该都是0.1,我设置错了.
-        data_virtual, label_virtual = model_g.generate_virtual(data, label, set_encode_detach=True,
-                                                               set_virtual_label_uniform=True)
+        data_virtual, label_virtual = model_g.generate_virtual_v2(data, label, set_encoded_detach=True,
+                                                                  train_generate=False, num_classes=num_classes)
+        data_virtual = data_virtual.detach()
         pred_normal = model_d(data_normal)
-        loss_normal = criterion_cross(pred_normal, label_normal)
+        loss_normal = criterion(pred_normal, label_normal)
         pred_virtual = model_d(data_virtual)
-        loss_virtual = criterion_cross(pred_virtual, label_virtual)
+        loss_virtual = criterion(pred_virtual, label_virtual)
         loss = (loss_virtual + loss_normal).mean()
         optimizer_d.zero_grad()
         loss_normal.backward()
@@ -201,9 +150,9 @@ for epoch in range(args.epochs):
         optimizer_d.step()
         loss_train_containv += loss.item()
         # 没啥用就是看一下ae生成看来咋样的虚假图像用于压制训练
-        if batch_idx < 10 and epoch % 40 == 0:
+        if batch_idx == 0 and epoch % 10 == 0:
             pic = torch.concat([data, data_virtual], dim=0)
-            save_image(pic, results_pic_root + f"/virtualpic--epoch{epoch}--{batch_idx}.jpg")
+            save_image(pic, results_root_pic + f"/virtualpic--epoch{epoch}.jpg")
 
     loss_train_containv /= len(trainloader_cifar10)
     # 测试
@@ -224,6 +173,6 @@ for epoch in range(args.epochs):
     print(f"epoch[{epoch}/{args.epochs}] : cifar10_test_acc={acc} , ", "mmc_test_cifar10=", mmc_cifar10)
     print("loss_train_containv=", loss_train_containv, "mmc_cifar100=", mmc_cifar100, " , mmc_svhn=", mmc_svhn)
     print("-" * 40)
-with open("./runs/mmc.txt", "a+") as results_file:
+with open("./runs/new_mmc.txt", "a+") as results_file:
     results_file.write(
         f"--lossweight{args.loss_virtual_weight}--ae_version{args.ae_version} : acc={acc},mmc_cifar10={mmc_cifar10},mmc_cifar100={mmc_cifar100},mmc_svhn={mmc_svhn}\r\n")
