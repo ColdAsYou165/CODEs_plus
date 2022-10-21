@@ -51,8 +51,6 @@ testloader_svhn = torch.utils.data.DataLoader(svhn_test, batch_size=batch_size, 
 # 模型
 model_resnet18 = resnet_orig.ResNet18(num_classes=10).cuda()
 
-criterion_mseloss = torch.nn.MSELoss().cuda()
-
 
 def test_resnet_acc_and_mmc(model=None, root=""):
     '''
@@ -104,7 +102,7 @@ def test_ae_reconstruct(model=AutoEncoder_Miao().cuda(), trainloader=trainloader
         data = data.cuda()
         label = label.cuda()
         reconstruct = model(data)
-        loss_mse = criterion_mseloss(data, reconstruct)
+        loss_mse = criterion_mse(data, reconstruct)
         loss_mse_all += loss_mse.item()
     loss_mse_all /= len(trainloader)
     print("loss_mse_train=", loss_mse_all)
@@ -114,7 +112,7 @@ def test_ae_reconstruct(model=AutoEncoder_Miao().cuda(), trainloader=trainloader
         data = data.cuda()
         label = label.cuda()
         reconstruct = model(data)
-        loss_mse = criterion_mseloss(data, reconstruct)
+        loss_mse = criterion_mse(data, reconstruct)
         loss_mse_all += loss_mse.item()
     loss_mse_all /= len(testloader)
     print("loss_mse_test=", loss_mse_all)
@@ -129,8 +127,35 @@ def view_virtual(model=AutoEncoder_Miao().cuda(), root=""):
     for data, label in trainloader_cifar10:
         data = data.cuda()
         label = label.cuda()
-        virtual_data= model(data)
+        virtual_data = model(data)
         save_image(virtual_data, f"./pic/virtual_data,jpg")
+
+
+def test_train_ae_forkfadernet_differnety():
+    '''
+    测试相同图像不同y会生成不一样的图像吗?
+    :return:
+    '''
+    model_g = AutoEncoder_Miao_containy(num_classes=10).cuda()
+    root = "../results/train_ae_forkfadernet_v1/"
+    files = os.listdir(root)
+    data, label = next(iter(trainloader_cifar10))
+    data = data.cuda()
+    label = label.cuda()
+    label = torch.tensor([i for i in range(10)]).long().cuda()
+    for file in files:
+        root_pth = root + file + "/pth" + "/ae_ae_forkFaderNet--epoch1199.pth"
+        root_result = f"../results/test_train_ae_forkfadernet_differnety/{file}/"
+        os.makedirs(root_result, exist_ok=True)
+        if not os.path.exists(root_pth):
+            continue
+        model_g.load_state_dict(torch.load(root_pth))
+        for i in range(10):
+            img = data[i].expand([len(label), -1, -1, -1])
+            # virtual_data, virtual_label = model_g.generate_virtual(img, label)
+            virtual_data = model_g(img, label)
+            print(virtual_data.shape)
+            save_image(virtual_data, root_result + f"virtual_data{i}.jpg")
 
 
 if __name__ == "__main__":
@@ -138,4 +163,13 @@ if __name__ == "__main__":
     # test_resnet_acc_and_mmc(model=model_resnet18, root="../betterweights/resnet18_baseline_trainedbymiao_acc0.9532.pth")
     # test_ae_reconstruct(root="../betterweights/ae_miao_trainedbybclloss--epoch496--loss0.0006234363307940621.pth")
 
-    view_virtual()
+    # view_virtual()
+    test_train_ae_forkfadernet_differnety()
+    '''root = "../results/train_ae_forkfadernet_v1/"
+    files = os.listdir(root)
+    for file in files:
+        # pth=os.listdir(root + file)[2]
+        pth = "pth"
+        a = os.listdir(root + file + "/" + pth)
+        # print(root + file + "/" + pth)
+        print(a)'''

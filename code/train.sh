@@ -480,27 +480,42 @@ b=9
 #python train_ae_containy.py --gpus 5 --lr 0.0002 --lr_dis 0.0002 --w_loss_weight 1 &
 #python train_ae_containy.py --gpus 2 --lr 12e-5 --lr_dis 6e-5 &
 #sleep 10
-python train_resnet_byvirtual.py --gpus 0 --ae_version 12 --loss_virtual_weight 1 &
-sleep 60
-python train_resnet_byvirtual.py --gpus 1 --ae_version 12 --loss_virtual_weight 1e-1 &
-sleep 60
-python train_resnet_byvirtual.py --gpus 2 --ae_version 12 --loss_virtual_weight 1e-3 &
-sleep 60
-python train_resnet_byvirtual.py --gpus 3 --ae_version 12 --loss_virtual_weight 1e-5 &
+#python train_resnet_byvirtual.py --gpus 0 --ae_version 12 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 1 --ae_version 12 --loss_virtual_weight 1e-1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 2 --ae_version 12 --loss_virtual_weight 1e-3 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 3 --ae_version 12 --loss_virtual_weight 1e-5 &
+##
+#python train_resnet_byvirtual.py --gpus 4 --ae_version 13 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 5 --ae_version 13 --loss_virtual_weight 1e-1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 7 --ae_version 13 --loss_virtual_weight 1e-3 &
+#sleep 60
+#wait
+#python train_resnet_byvirtual.py --gpus 0 --ae_version 13 --loss_virtual_weight 1e-5 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 4 --ae_version 14 --loss_virtual_weight 1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 1 --ae_version 14 --loss_virtual_weight 1e-1 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 2 --ae_version 14 --loss_virtual_weight 1e-3 &
+#sleep 60
+#python train_resnet_byvirtual.py --gpus 3 --ae_version 14 --loss_virtual_weight 1e-5 &
+#python train_ae_forkfadernet.py --gpus 0 --method_label 0 --lr 2e-4 --lr_dis 2e-4 &
+#sleep 10
+#python train_ae_forkfadernet.py --gpus 1 --method_label 0 --lr 2e-4 --lr_dis 2e-4 --cross_loss_weight 1e-3 &
+#sleep 10
+#python train_ae_forkfadernet.py --gpus 2 --method_label 1 --lr 2e-4 --lr_dis 2e-4 &
+#sleep 10
+#python train_ae_forkfadernet.py --gpus 3 --method_label 1 --lr 2e-4 --lr_dis 2e-4 --cross_loss_weight 1e-3 &
+#sleep 10
 #
-python train_resnet_byvirtual.py --gpus 4 --ae_version 13 --loss_virtual_weight 1 &
-sleep 60
-python train_resnet_byvirtual.py --gpus 5 --ae_version 13 --loss_virtual_weight 1e-1 &
-sleep 60
-python train_resnet_byvirtual.py --gpus 7 --ae_version 13 --loss_virtual_weight 1e-3 &
-sleep 60
-wait
-python train_resnet_byvirtual.py --gpus 0 --ae_version 13 --loss_virtual_weight 1e-5 &
-sleep 60
-python train_resnet_byvirtual.py --gpus 4 --ae_version 14 --loss_virtual_weight 1 &
-sleep 60
-python train_resnet_byvirtual.py --gpus 1 --ae_version 14 --loss_virtual_weight 1e-1 &
-sleep 60
-python train_resnet_byvirtual.py --gpus 2 --ae_version 14 --loss_virtual_weight 1e-3 &
-sleep 60
-python train_resnet_byvirtual.py --gpus 3 --ae_version 14 --loss_virtual_weight 1e-5 &
+#python train_ae_forkfadernet.py --gpus 5 --method_label 0 --lr 6e-5 --lr_dis 6e-5 &
+python train_ae_forkfadernet.py --gpus 5 --method_label 0 --lr 6e-5 --lr_dis 6e-5 --cross_loss_weight 1e-3 &
+sleep 10
+python train_ae_forkfadernet.py --gpus 6 --method_label 1 --lr 6e-5 --lr_dis 6e-5 &
+sleep 10
+python train_ae_forkfadernet.py --gpus 7 --method_label 1 --lr 6e-5 --lr_dis 6e-5 --cross_loss_weight 1e-3 &

@@ -13,6 +13,10 @@ import torch.nn.init as init
 import torch
 import torchvision.transforms as transforms
 
+# criterion
+criterion_mse = torch.nn.MSELoss().cuda()
+criterion_blend = torch.nn.CrossEntropyLoss().cuda()
+
 # 数据预处理
 
 # 尽量只用这两个
@@ -349,10 +353,10 @@ def getLogger(formatter_str=None, root_filehandler=None):
 
 def getResultDir(name_project, name_args, results_root=f"../results"):
     '''
-
+    创建实验相应目录
     :param name_project:
     :param name_args:
-    :param results_root:
+    :param results_root:"../results"
     :return:
     '''
     # name_project = f"ae_containy_reconstruct_v1"
@@ -367,6 +371,18 @@ def getResultDir(name_project, name_args, results_root=f"../results"):
     os.makedirs(results_pic_root, exist_ok=True)
     os.makedirs(results_pth_root, exist_ok=True)
     return results_root, (results_pth_root, results_pic_root)
+
+
+def getWritter(name_project):
+    '''
+    返回writter,其中按照项目名称/运行时间
+    :param name_project:
+    :return:
+    '''
+    from torch.utils.tensorboard import SummaryWriter
+    from datetime import datetime
+    writter = SummaryWriter(f"../runs/{name_project}/{datetime.now().strftime('%y-%m-%d,%H-%M-%S')}")
+    return writter
 
 
 if __name__ == "__main__":

@@ -848,7 +848,7 @@ class AutoEncoder_Miao_containy(nn.Module):
     在苗师兄ae的基础上,借鉴FaderNetwork的思想,在decoder阶段加入y的标签
     '''
 
-    def __init__(self, num_classes=10):
+    def __init__(self, num_classes):
         super(AutoEncoder_Miao_containy, self).__init__()
         self.relu = nn.ReLU(inplace=True)
         self.num_classes = num_classes
@@ -972,6 +972,7 @@ class AutoEncoder_Miao_containy(nn.Module):
         # 64,8,8 -> 3 28 28
         if len(y.shape) == 1:
             y = F.one_hot(y, self.num_classes)
+            print(y)
         assert y.shape == (x.shape[0], self.num_classes)
         y = y.unsqueeze(2).unsqueeze(3)  # [n, num_classes, 1, 1]
         for ct in [self.ct1, self.ct2, self.ct3, self.ct4, self.ct5, self.ct6, self.ct7, self.ct8]:
@@ -1246,6 +1247,47 @@ class Discriminator_FaderNet(nn.Module):
         return x
 
 
+class Discriminator_FaderNet(nn.Module):
+    '''
+    仿照FaderNet的结构
+    用了三层421卷积和2层全连接
+    '''
+
+    def __init__(self, in_channel, in_size, num_classes):
+        super(Discriminator_FaderNet, self).__init__()
+        self.in_channel = in_channel
+        self.in_size = in_size
+        self.num_classes = num_classes
+        self.c1 = nn.Sequential(
+            nn.Conv2d(self.in_channel, 128, 4, 2, 1),
+            nn.LeakyReLU(0.2, True)
+        )
+        self.c2 = nn.Sequential(
+            nn.Conv2d(128, 256, 4, 2, 1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(0.2, True)
+        )
+        self.c3 = nn.Sequential(
+            nn.Conv2d(256, 512, 4, 2, 1),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(0.2, True)
+        )
+        self.in_linear = int(512 * in_size / 8)
+        self.proj = nn.Sequential(
+            nn.Linear(self.in_linear, 256),
+            nn.LeakyReLU(0.2, True),
+            nn.Linear(256, self.num_classes)
+        )
+
+    def forward(self, z):
+        z = self.c1(z)
+        z = self.c2(z)
+        z = self.c3(z)
+        z = z.squeeze()
+        z = self.proj(z)
+        return z
+
+
 def ex_ae_fadernet():
     pass
     num_classes = 10
@@ -1284,4 +1326,11 @@ if __name__ == "__main__":
     label = torch.tensor([0, 1, 2, 3, 0])
     model.generate_virtual_v1(data, label, True, 4)'''
     # ex_ae_fadernet()
-    ex_dis()
+    # ex_dis()
+    # model_g = AutoEncoder_Miao_containy()
+    model_g = Discriminator_FaderNet(64, 8, 10)
+    # model_g=nn.Conv2d(3,16,3,1,1)
+    x = torch.rand(4, 64, 8, 8)
+    print(model_g)
+    y = model_g(x)
+    print(y.shape)

@@ -1,5 +1,5 @@
 '''
-
+仿照Fadernet的结构,但是我是用高斯噪声作为负样本,本该用分类器作为鉴别器的
 '''
 import os
 import time
@@ -197,9 +197,9 @@ def train_generate_virtual():
     args_str = get_args_str(args)
     # v1只用wloss和blendloss
     # v2 只用wloss和blendloss,但是添加lr_g和lr_d相同或者为2倍以及,wloss:blendloss=1:1的约束,且epochs为1800
-    # v2w2是观察一个epoch输出的图像长什么样子
+    # v2w2是观察一个epoch输出的图像长什么样子 v2w3在训练途中保存生成的虚假图像
 
-    name_project = "ae_containy_generatevirtual_v2_w2"
+    name_project = "ae_containy_generatevirtual_v2_w3"
 
     # log = getLogger(formatter_str=args_str, root_filehandler=f"../log/train_ae_containy_log.log")
     writter = SummaryWriter(f"../runs/{name_project}/{datetime.now().strftime('%y-%m-%d,%H-%M-%S')}")
@@ -232,6 +232,8 @@ def train_generate_virtual():
         loss_w_all = 0
         loss_blend_all = 0
         loss_chamfer_all = 0
+        root_pic_training = root_result + f"/trainging/img{epoch}"
+        os.makedirs(root_pic_training, exist_ok=True)
         for batch_idx, (data, label) in enumerate(trainloader_cifar10):
             data = data.cuda()
             label = label.cuda()
@@ -243,6 +245,8 @@ def train_generate_virtual():
             # 生成虚假图像
             virtual_data, virtual_label = model_g.generate_virtual(data, label, set_encode_detach=True,
                                                                    set_virtual_label_uniform=False)
+            if True and epoch > 60 and batch_idx % 50 == 0:
+                save_image(virtual_data, root_pic_training + f"/img{batch_idx}.jpg")  # 保存每一张生成的图像,观察是否正常.若正常,则是保存图像的问题
             output_virtual = discriminator(virtual_data.detach())
             output_virtual.backward(mone)  # fake 1
             pred_virtual_all += output_virtual.item()
@@ -277,8 +281,10 @@ def train_generate_virtual():
         save_image(virtual_data, root_pic + f"/virtualpic--epoch{epoch}.jpg")
         if True and (epoch + 1) % 200 == 0:
             torch.save(model_g.state_dict(), root_pth + f"/ae_generatevirtual--epoch{epoch}.pth")
-        if epoch > 500:
-            root_img_epoch = root_result + f"epochimg/epoch{epoch}"
+
+        # 打印整个epoch的虚假图像,但是发现生成的啥都不是
+        if False and epoch > 500:
+            root_img_epoch = root_result + f"/epochimg/epoch{epoch}"
             os.makedirs(root_img_epoch, exist_ok=True)
             with torch.no_grad():
                 model_g.train()
@@ -338,20 +344,6 @@ def test_generate_virtual():
         virtual_data, virtual_label = model_g.generate_virtual(data, label)
         print(virtual_data.shape)
         save_image(virtual_data, root_img + f"/trainimg{batch_idx}.jpg")
-
-
-def supress_by_virtual():
-    '''
-    压制试验
-    :return:
-    '''
-    root_pth = "/mnt/data/maxiaolong/CODEsSp/results/ae_containy_generatevirtual_v2_w1/argsbatch_size128--beta10.5--blend_loss_weight1.0--epochs1800--gpus'0'--lr6e-05--lr_dis6e-05--method'train_generate_virtual'--w_loss_weight1/pthae_generatevirtual--epoch1799.pth"
-    state_g = torch.load(root_pth)
-    model_g.load_state_dict(state_g)
-    model_g.eval()
-    for epoch in range(args.epochs):
-        for batch_idx, (data, label) in enumerate(trainloader_cifar10):
-            pass
 
 
 if __name__ == "__main__":
