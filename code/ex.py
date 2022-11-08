@@ -251,3 +251,19 @@ print(y)'''
 # x = torch.rand([8, 3, 256, 256])
 #
 # save_image(x,"./sad.png")
+# x = torch.tensor([i for i in range(40)]).reshape(4, 10).float().softmax(dim=1)
+x=torch.rand([4,10],requires_grad=True).softmax(dim=1)
+y = torch.tensor([0, 1, 2, 3])
+print(x,y)
+'''# print(x)
+y = F.one_hot(y, 10)
+print(x)
+print(y)
+z = (x * y).sum(dim=1)
+z=torch.where(z>0.1,z-0.1,0)
+print(z)
+z=z.mean()
+print(z)
+z.backward()'''
+
+get_tang_loss(x,y,10)

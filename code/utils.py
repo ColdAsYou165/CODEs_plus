@@ -12,6 +12,7 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch
 import torchvision.transforms as transforms
+import torch.nn.functional as F
 import numpy as np
 import random
 
@@ -398,6 +399,23 @@ def setup_seed(seed):
     np.random.seed(seed)
     random.seed(seed)
     torch.backends.cudnn.deterministic = True
+
+
+def get_tang_loss(pred, label, num_classes):
+    '''
+    在正确类别上的置信度小于0.1就好,max( C(P)[y]-1/k , 0 )'
+    :param pred:通过softmax之后的置信度
+    :param label: ground truth
+    :param num_classes:
+    :return:max( C(P)[y]-1/k , 0 )
+    '''
+    if len(label.shape) == 1:
+        label = F.one_hot(label, num_classes)
+    assert label.shape != [len(pred), num_classes]
+    output = (pred * label).sum(dim=1) - 0.1
+    output = torch.where(output < 0, 0, output)
+    output = output.mean()
+    return output
 
 
 if __name__ == "__main__":
