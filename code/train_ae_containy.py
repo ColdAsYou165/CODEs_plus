@@ -6,7 +6,8 @@ import time
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--method", default="train_generate_virtual", help="执行哪个文件")
+# parser.add_argument("--method", default="train_generate_virtual", help="执行哪个文件")
+parser.add_argument("--method", default="view_generate_virtual_onebyone", help="执行哪个文件")
 parser.add_argument("--gpus", default="0")
 parser.add_argument("--epochs", type=int, default=1000)
 parser.add_argument("--batch_size", type=int, default=128, help="苗师兄默认128")
@@ -16,9 +17,10 @@ parser.add_argument("--lr_dis", type=float, default=6e-5, help='wgan discrinator
 
 parser.add_argument("--w_loss_weight", type=float, default=1, help="miaoshixiong 1e-5")
 parser.add_argument("--blend_loss_weight", type=float, default=1., help="")
-parser.add_argument("--chamfer_loss_weight", type=float, default=1., help="")
+# parser.add_argument("--chamfer_loss_weight", type=float, default=1., help="")
 
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
+parser.add_argument("--seed", type=int, default=1)
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
@@ -40,7 +42,7 @@ from models import resnet_orig
 
 # 起势
 
-
+setup_seed(args.seed)
 # 数据集
 
 num_classes = 10
@@ -54,7 +56,7 @@ testloader_cifar10 = DataLoader(testset_cifar10, args.batch_size, shuffle=True, 
 
 # 模型
 
-model_g = AutoEncoder_Miao_containy().cuda()
+model_g = AutoEncoder_Miao_containy(num_classes).cuda()
 model_g.apply(weights_init)
 
 # 优化器
@@ -110,6 +112,7 @@ def test_reconstruct():
     #     拿能够重构的ae,检查一下,不同y会对应什么情况
     # 实验结果,不同y会产生一样的图像.也就是说,y被decoder忽视了.
     root_weight = "../betterweights/ae_miao_containy/ae_generatevirtual--epoch199--blend1.pth"
+    # root_weight = "../betterweights/train_ae_containy/ae_generatevirtual--epoch999.pth"
     model_g.load_state_dict(torch.load(root_weight))
     virtual_data = model_g(origin_data, origin_label)
     data, label = origin_data[0], origin_label[0]
@@ -192,19 +195,22 @@ def train_generate_virtual():
     '''
     训练生成虚假图像
     :return:
+    lr2e-5 lr_d2e-5 blendloss_weight 1能够生成虚假图像
     '''
     # 起势
     args_str = get_args_str(args)
     # v1只用wloss和blendloss
     # v2 只用wloss和blendloss,但是添加lr_g和lr_d相同或者为2倍以及,wloss:blendloss=1:1的约束,且epochs为1800
-    # v2w2是观察一个epoch输出的图像长什么样子 v2w3在训练途中保存生成的虚假图像
-
-    name_project = "ae_containy_generatevirtual_v2_w3"
+    # v2w2是观察一个epoch输出的图像长什么样子 v2w3在训练途中保存生成的虚假图像 w4是发现blend权重为1的时候有时候可以生成正常图像而有时又不行.
+    # w5旭健说保存eval的图像
+    # w6再保存下model.eval时期训练集图像,model.train时期测试集图像
+    name_project = "ae_containy_generatevirtual_v2_w6"
 
     # log = getLogger(formatter_str=args_str, root_filehandler=f"../log/train_ae_containy_log.log")
     writter = SummaryWriter(f"../runs/{name_project}/{datetime.now().strftime('%y-%m-%d,%H-%M-%S')}")
     writter.add_text("args", f"{name_project}\r\n{args}")
-    root_result, (root_pth, root_pic) = getResultDir(name_project=name_project, name_args=args_str)
+    root_result, (root_pth, root_pic) = getResultDir(name_project=name_project,
+                                                     name_args=args_str + f"{datetime.now().strftime('%y-%m-%d,%H-%M-%S')}")
     log = getLogger(formatter_str=None, root_filehandler=root_result + f"/logger.log")
     log.info(str(args))
     # 模型
@@ -232,7 +238,7 @@ def train_generate_virtual():
         loss_w_all = 0
         loss_blend_all = 0
         loss_chamfer_all = 0
-        root_pic_training = root_result + f"/trainging/img{epoch}"
+        root_pic_training = root_result + f"/img-epoch/img{epoch}"
         os.makedirs(root_pic_training, exist_ok=True)
         for batch_idx, (data, label) in enumerate(trainloader_cifar10):
             data = data.cuda()
@@ -245,7 +251,7 @@ def train_generate_virtual():
             # 生成虚假图像
             virtual_data, virtual_label = model_g.generate_virtual(data, label, set_encode_detach=True,
                                                                    set_virtual_label_uniform=False)
-            if True and epoch > 60 and batch_idx % 50 == 0:
+            if True and batch_idx % 80 == 0:
                 save_image(virtual_data, root_pic_training + f"/img{batch_idx}.jpg")  # 保存每一张生成的图像,观察是否正常.若正常,则是保存图像的问题
             output_virtual = discriminator(virtual_data.detach())
             output_virtual.backward(mone)  # fake 1
@@ -267,7 +273,6 @@ def train_generate_virtual():
             loss_blend_all += loss_blend.item()
 
             ## chamferloss
-
             optimizer_g.step()
         # 观察量
         pred_real_all /= len(trainloader_cifar10)
@@ -299,6 +304,40 @@ def train_generate_virtual():
                     label = label.cuda()
                     virtual_data, virtual_label = model_g.generate_virtual(data, label)
                     save_image(virtual_data, root_img_epoch + f"/trainimg{batch_idx}.jpg")
+        model_g.eval()
+        for batch_idx, (data, label) in enumerate(testloader_cifar10):
+            data = data.cuda()
+            label = label.cuda()
+            virtual_data, virtual_label = model_g.generate_virtual(data, label)
+            if batch_idx < 10:
+                save_image(virtual_data, root_pic_training + f"/test-eval{batch_idx}.jpg")
+            else:
+                break
+        for batch_idx, (data, label) in enumerate(trainloader_cifar10):
+            data = data.cuda()
+            label = label.cuda()
+            virtual_data, virtual_label = model_g.generate_virtual(data, label)
+            if batch_idx < 10:
+                save_image(virtual_data, root_pic_training + f"/train-eval{batch_idx}.jpg")
+            else:
+                break
+        model_g.train()
+        for batch_idx, (data, label) in enumerate(testloader_cifar10):
+            data = data.cuda()
+            label = label.cuda()
+            virtual_data, virtual_label = model_g.generate_virtual(data, label)
+            if batch_idx < 10:
+                save_image(virtual_data, root_pic_training + f"/test-train{batch_idx}.jpg")
+            else:
+                break
+        for batch_idx, (data, label) in enumerate(trainloader_cifar10):
+            data = data.cuda()
+            label = label.cuda()
+            virtual_data, virtual_label = model_g.generate_virtual(data, label)
+            if batch_idx < 10:
+                save_image(virtual_data, root_pic_training + f"/train-train{batch_idx}.jpg")
+            else:
+                break
 
 
 def test_generate_virtual():
@@ -306,6 +345,7 @@ def test_generate_virtual():
     检查生成的虚假图像的质量
     :return:
     '''
+    setup_seed(3)
     cifar100_train = torchvision.datasets.CIFAR100(root="../data/cifar100", train=True, download=False,
                                                    transform=transform_train_cifar_miao)
     cifar100_test = torchvision.datasets.CIFAR100(root="../data/cifar100", train=False, download=False,
@@ -323,27 +363,92 @@ def test_generate_virtual():
 
     # batch_size128--beta10.5--blend_loss_weight1.0--epochs1800--gpus'0'--lr6e-05--lr_dis6e-05--method'train_generate_virtual'--w_loss_weight1
     # root_pth = "/mnt/data/maxiaolong/CODEsSp/results/ae_containy_generatevirtual_v2_w1/argsbatch_size128--beta10.5--blend_loss_weight1.0--epochs1800--gpus'0'--lr6e-05--lr_dis6e-05--method'train_generate_virtual'--w_loss_weight1/pthae_generatevirtual--epoch1599.pth"
-    root_pth = "/mnt/data/maxiaolong/CODEsSp/results/ae_containy_generatevirtual_v2_w1/argsbatch_size128--beta10.5--blend_loss_weight0.001--epochs1800--gpus'1'--lr6e-05--lr_dis6e-05--method'train_generate_virtual'--w_loss_weight1/pthae_generatevirtual--epoch1799.pth"
-    model_g.load_state_dict(torch.load(root_pth))
+    # root_pth = "/mnt/data/maxiaolong/CODEsSp/results/ae_containy_generatevirtual_v2_w1/argsbatch_size128--beta10.5--blend_loss_weight0.001--epochs1800--gpus'1'--lr6e-05--lr_dis6e-05--method'train_generate_virtual'--w_loss_weight1/pthae_generatevirtual--epoch1799.pth"
+    # model_g.load_state_dict(torch.load("../betterweights/ae_miao_containy.pth"))
+    model_g.load_state_dict(torch.load("../betterweights/train_ae_containy/caixvjian.pth"))
+    # root_pth = "../betterweights/train_ae_containy/ae_generatevirtual--epoch999.pth"
+    # model_g.load_state_dict(torch.load(root_pth))
     torch.no_grad()
     # model_g.eval()
-    root_result = f"../results/test_generate_virtual"
+    # model_g.train()
+    root_result = f"../results/test_generate_virtual/caixvjian3"
+    os.makedirs(root_result, exist_ok=True)
+    with open(root_result + f"/readme.txt", "w") as file:
+        file.write("训练ae时候能生成虚假图像,但是加载权重再生成就会有问题")
+        file.write("所以尝试观察生成的虚假图像")
     root_img = root_result + "/img"
     os.makedirs(root_img, exist_ok=True)
-    os.makedirs(root_result, exist_ok=True)
     # model_d=
     for batch_idx, (data, label) in enumerate(testloader_cifar10):
+        model_g.train()
         data = data.cuda()
         label = label.cuda()
-        virtual_data, virtual_label = model_g.generate_virtual(data, label)
-        save_image(virtual_data, root_img + f"/testimg{batch_idx}.jpg")
+        print(torch.max(data).item(), torch.min(data).item())
+        virtual_data, virtual_label = model_g.generate_virtual(data, label, set_virtual_label_uniform=False)
+        virtual_data = torch.concat([data, virtual_data], dim=0)
+        save_image(virtual_data, root_img + f"/testtrain{batch_idx}.jpg")
+        print(virtual_data.shape)
+    for batch_idx, (data, label) in enumerate(testloader_cifar10):
+        model_g.eval()
+        data = data.cuda()
+        label = label.cuda()
+        print(torch.max(data).item(), torch.min(data).item())
+        virtual_data, virtual_label = model_g.generate_virtual(data, label, set_virtual_label_uniform=False)
+        virtual_data = torch.concat([data, virtual_data], dim=0)
+        save_image(virtual_data, root_img + f"/testeval{batch_idx}.jpg")
         print(virtual_data.shape)
     for batch_idx, (data, label) in enumerate(trainloader_cifar10):
+        model_g.train()
         data = data.cuda()
         label = label.cuda()
-        virtual_data, virtual_label = model_g.generate_virtual(data, label)
+        print(torch.max(data).item(), torch.min(data).item())
+        virtual_data, virtual_label = model_g.generate_virtual(data, label, set_virtual_label_uniform=False)
+        virtual_data = torch.concat([data, virtual_data], dim=0)
         print(virtual_data.shape)
-        save_image(virtual_data, root_img + f"/trainimg{batch_idx}.jpg")
+        save_image(virtual_data, root_img + f"/traintrain{batch_idx}.jpg")
+    for batch_idx, (data, label) in enumerate(trainloader_cifar10):
+        model_g.eval()
+        data = data.cuda()
+        label = label.cuda()
+        print(torch.max(data).item(), torch.min(data).item())
+        virtual_data, virtual_label = model_g.generate_virtual(data, label, set_virtual_label_uniform=False)
+        virtual_data = torch.concat([data, virtual_data], dim=0)
+        print(virtual_data.shape)
+        save_image(virtual_data, root_img + f"/traineval{batch_idx}.jpg")
+
+
+def view_generate_virtual_onebyone():
+    model_g.load_state_dict(torch.load("../betterweights/train_ae_containy/caixvjian.pth"))
+    torch.no_grad()
+    model_g.eval()
+    root_result = f"../results/view_generate_virtual_onebyone/v2"
+    os.makedirs(root_result, exist_ok=True)
+    with open(root_result + f"/readme.txt", "w") as file:
+        file.write("查看父母和儿子的情况")
+    root_img = root_result + "/img"
+    os.makedirs(root_img, exist_ok=True)
+    img = []
+    for batch_idx, (data, label) in enumerate(trainloader_cifar10):
+        model_g.train()
+        data = data.cuda()
+        label = label.cuda()
+        for i in range(len(data) - 1):
+            data1 = data[i].squeeze(dim=0)
+            data2 = data[i + 1].squeeze(dim=0)
+            label1 = label[i]
+            label2 = label[i + 1]
+            virtual_data = model_g.generate_one_virtual(data1, data2, label1, label2)
+            data1 = data1.unsqueeze(dim=0)
+            data2 = data2.unsqueeze(dim=0)
+            print(data1.shape, virtual_data.shape)
+            img.append(torch.concat([data1, data2, virtual_data], dim=2))
+        img = torch.concat(img, dim=0)
+        print(img.shape)
+        # img = img.reshape([int(img.shape[0] / 3)], 3, -1, img.shape[3])
+        # print(img.shape)
+        save_image(img, root_img + f"img.jpg")
+        # save_image(img, root_img + f"img--fm{label1.item()}{label2.item()}.jpg")
+        break
 
 
 if __name__ == "__main__":
@@ -351,13 +456,15 @@ if __name__ == "__main__":
     print("执行方法:", args.method)
     if args.method == "train_generate_virtual":
         train_generate_virtual()
+    elif args.method == "test_generate_virtual":
+        test_generate_virtual()
+    elif args.method == "view_generate_virtual_onebyone":
+        view_generate_virtual_onebyone()
     elif args.method == "train_reconstruct":
         train_reconstruct()
     elif args.method == "test_reconstruct":
         test_reconstruct()
     elif args.method == "train_ae_bygan":
         train_ae_bygan()
-    elif args.method == "test_generate_virtual":
-        test_generate_virtual()
     else:
         exit(-1)

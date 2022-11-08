@@ -514,8 +514,32 @@ b=9
 #sleep 10
 #
 #python train_ae_forkfadernet.py --gpus 5 --method_label 0 --lr 6e-5 --lr_dis 6e-5 &
-python train_ae_forkfadernet.py --gpus 5 --method_label 0 --lr 6e-5 --lr_dis 6e-5 --cross_loss_weight 1e-3 &
-sleep 10
-python train_ae_forkfadernet.py --gpus 6 --method_label 1 --lr 6e-5 --lr_dis 6e-5 &
-sleep 10
-python train_ae_forkfadernet.py --gpus 7 --method_label 1 --lr 6e-5 --lr_dis 6e-5 --cross_loss_weight 1e-3 &
+#python train_ae_forkfadernet.py --gpus 5 --method_label 0 --lr 6e-5 --lr_dis 6e-5 --cross_loss_weight 1e-3 &
+#sleep 10
+#python train_ae_forkfadernet.py --gpus 6 --method_label 1 --lr 6e-5 --lr_dis 6e-5 &
+#sleep 10
+#python train_ae_forkfadernet.py --gpus 7 --method_label 1 --lr 6e-5 --lr_dis 6e-5 --cross_loss_weight 1e-3 &
+#python train_ae_containy.py --lr 0.002 --lr_dis 0.002 --gpus 0 &
+#sleep 10
+#python train_ae_containy.py --lr 0.0002 --lr_dis 0.0002 --gpus 1 &
+#sleep 10
+#python train_ae_containy.py --lr 0.00002 --lr_dis 0.00002 --gpus 2 &# 这个成了
+#sleep 10
+#python train_ae_containy.py --lr 0.00002 --lr_dis 0.00002 --gpus 3 &
+#python train_resnet_byvirtual.py --gpus 0 --loss_virtual_weight 1 &
+#python train_resnet_byvirtual.py --gpus 1 --loss_virtual_weight 0.1 &
+#python train_resnet_byvirtual.py --gpus 2 --loss_virtual_weight 0.001 &
+#python train_resnet_byvirtual.py --gpus 3 --loss_virtual_weight 1 --batch_size 28 &
+#python train_resnet_byvirtual.py --gpus 4 --loss_virtual_weight 1 --batch_size 512 &
+#python train_ae_containy.py --gpus 0 --seed 0 &
+#python train_ae_containy.py --gpus 1 --seed 1 &
+#python train_ae_containy.py --gpus 2 --seed 2 &
+#python train_ae_containy.py --gpus 3 --seed 3 &
+#python train_ae_containy.py --gpus 4 --seed 42 &
+#python train_ae_containy.py --gpus 5 --seed 22 &
+#python train_ae_containy.py --gpus 6 --seed 2022 &
+#python train_ae_containy.py --gpus 7 --seed 84 &
+python train_resnet_byvirtual.py --gpus 1 --loss_virtual_weight 1 &
+python train_resnet_byvirtual.py --gpus 2 --loss_virtual_weight 0.1 &
+python train_resnet_byvirtual.py --gpus 3 --loss_virtual_weight 1e-3 &
+python train_resnet_byvirtual.py --gpus 0 --loss_virtual_weight 1e-5 &

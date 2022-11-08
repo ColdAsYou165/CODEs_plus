@@ -12,6 +12,8 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch
 import torchvision.transforms as transforms
+import numpy as np
+import random
 
 # criterion
 criterion_mse = torch.nn.MSELoss().cuda()
@@ -26,7 +28,12 @@ std_cifar = [x / 255 for x in [63.0, 62.1, 66.7]]
 # 完全按照苗师兄代码执行,使用这个transform
 transform_train_cifar_miao = transforms.Compose([
     transforms.RandomHorizontalFlip(),
-    transforms.RandomCrop(32, padding=4),
+    # transforms.RandomCrop(32, padding=4),
+    transforms.ToTensor(),
+    # 苗师兄源代码归一化注释掉了
+    # transforms.Normalize(mean_cifar, std_cifar),
+])
+transform_test_cifar_miao = transforms.Compose([
     transforms.ToTensor(),
     # 苗师兄源代码归一化注释掉了
     # transforms.Normalize(mean_cifar, std_cifar),
@@ -37,11 +44,6 @@ transform_train_cifar_miao_Norm = transforms.Compose([
     transforms.ToTensor(),
     # ##加了之后acc0.5
     transforms.Normalize(mean_cifar, std_cifar),
-])
-transform_test_cifar_miao = transforms.Compose([
-    transforms.ToTensor(),
-    # 苗师兄源代码归一化注释掉了
-    # transforms.Normalize(mean_cifar, std_cifar),
 ])
 
 transform_only_tensor = transforms.Compose(
@@ -383,6 +385,19 @@ def getWritter(name_project):
     from datetime import datetime
     writter = SummaryWriter(f"../runs/{name_project}/{datetime.now().strftime('%y-%m-%d,%H-%M-%S')}")
     return writter
+
+
+def setup_seed(seed):
+    '''
+    设置随机数种子
+    :param seed:
+    :return:
+    '''
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    random.seed(seed)
+    torch.backends.cudnn.deterministic = True
 
 
 if __name__ == "__main__":

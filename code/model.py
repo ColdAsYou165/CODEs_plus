@@ -534,6 +534,7 @@ class AutoEncoder_Miao(nn.Module):
 
     def __init__(self):
         super(AutoEncoder_Miao, self).__init__()
+        self.num_classes = 10
         self.relu = nn.ReLU(inplace=True)
         # 16 32 32
         self.conv1 = nn.Sequential(nn.Conv2d(
@@ -799,9 +800,9 @@ class AutoEncoder_Miao(nn.Module):
         # print(label)
         return virtual_data, virtual_label
 
-    def generate_virtual_v2(self, data, label, set_encoded_detach, train_generate, num_classes=10):
+    def generate_virtual_v2(self, data, label, set_encoded_detach, train_generate, num_classes):
         '''
-        v2版本生成虚假样本,两个z和label乘以对应权重再相加
+        v2版本生成虚假样本,两个z和label乘以对应随机权重再相加
         :return:
         '''
         index_0 = torch.randperm(len(data)).cuda()
@@ -833,6 +834,34 @@ class AutoEncoder_Miao(nn.Module):
         # print(virtual_data.shape, virtual_label.shape)
         # print(virtual_data, virtual_label)
         return virtual_data, virtual_label
+
+    def generate_virtual_v0(self, x, y, set_encode_detach=True, set_virtual_label_uniform=True):
+        '''
+        :param x:
+        :param y:未经过独热编码之前的y
+        :param set_encode_detach:
+        :param set_virtual_label_uniform:
+        :return:生成的虚假图像x和虚假label y
+        最简单的生成虚假样本的方法,生成虚假样本方式是在c维度上进行拼接,且decoder只用数据没用标签
+        '''
+        x = self.encoder(x)
+        if set_encode_detach:
+            x = x.detach()
+
+        idx_0, idx_1 = torch.randperm(len(x)).cuda(), torch.randperm(len(x)).cuda()
+        idx_notequal = y[idx_0] != y[idx_1]
+        idx_0, idx_1 = idx_0[idx_notequal], idx_1[idx_notequal]
+        x = torch.concat([x[idx_0], x[idx_1]], dim=1)
+        x = self.decoder_virtual(x)
+
+        # virtual_label
+        y_0 = F.one_hot(y[idx_0], self.num_classes).cuda()
+        y_1 = F.one_hot(y[idx_1], self.num_classes).cuda()
+        y = (y_0 + y_1) / 2.
+        # virtual_data
+        if set_virtual_label_uniform:
+            y = (torch.ones_like(y) * 0.1).float().cuda()
+        return x, y
 
     def generate_virtual_by_add(self, x):
         pass
@@ -972,7 +1001,7 @@ class AutoEncoder_Miao_containy(nn.Module):
         # 64,8,8 -> 3 28 28
         if len(y.shape) == 1:
             y = F.one_hot(y, self.num_classes)
-            print(y)
+            # print(y)
         assert y.shape == (x.shape[0], self.num_classes)
         y = y.unsqueeze(2).unsqueeze(3)  # [n, num_classes, 1, 1]
         for ct in [self.ct1, self.ct2, self.ct3, self.ct4, self.ct5, self.ct6, self.ct7, self.ct8]:
@@ -1020,12 +1049,25 @@ class AutoEncoder_Miao_containy(nn.Module):
         y_0 = F.one_hot(y[idx_0], self.num_classes).cuda()
         y_1 = F.one_hot(y[idx_1], self.num_classes).cuda()
         y = (y_0 + y_1) / 2.
-        if set_virtual_label_uniform:
-            y = (torch.ones_like(y) * 0.1).float().cuda()
         y = y.detach()
         # virtual_data
         x = self.decoder_virtual(x, y)
+        if set_virtual_label_uniform:
+            y = (torch.ones_like(y) * 0.1).float().cuda()
         return x, y
+
+    def generate_one_virtual(self, data1, data2, label1, label2):
+        z1 = self.encoder(data1)
+        z2 = self.encoder(data2)
+        z = torch.concat([z1, z2], dim=0)
+        label1 = F.one_hot(label1, self.num_classes).cuda()
+        label2 = F.one_hot(label2, self.num_classes).cuda()
+        label = (label1 + label2) / 2.
+        label = label.detach()
+        z = z.unsqueeze(dim=0)
+        label = label.unsqueeze(dim=0)
+        v = self.decoder_virtual(z, label)
+        return v
 
 
 class ResNet_sigmoid(nn.Module):

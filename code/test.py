@@ -163,8 +163,8 @@ if __name__ == "__main__":
     # test_resnet_acc_and_mmc(model=model_resnet18, root="../betterweights/resnet18_baseline_trainedbymiao_acc0.9532.pth")
     # test_ae_reconstruct(root="../betterweights/ae_miao_trainedbybclloss--epoch496--loss0.0006234363307940621.pth")
 
-    # view_virtual()
-    test_train_ae_forkfadernet_differnety()
+    view_virtual()
+    # test_train_ae_forkfadernet_differnety()
     '''root = "../results/train_ae_forkfadernet_v1/"
     files = os.listdir(root)
     for file in files:

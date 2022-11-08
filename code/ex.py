@@ -101,7 +101,6 @@ a=datetime.now().strftime('%y-%m-%d,%H-%M-%S')
 print(a)
 print(type(a))'''
 
-
 # def build_layers(img_sz, img_fm, init_fm, max_fm, n_layers, n_attr, n_skip,
 #                  deconv_method, instance_norm, enc_dropout, dec_dropout):
 #     """
@@ -249,6 +248,6 @@ n_cat=7
 shift = torch.LongTensor(y.size()).random_(n_cat - 1) + 1
 y = (y + Variable(shift)) % n_cat
 print(y)'''
-x=torch.tensor([[1,2,3],[4,5,6]])
-# x=x.unsqueeze(dim=0)
-# print(x,x.shape)
+# x = torch.rand([8, 3, 256, 256])
+#
+# save_image(x,"./sad.png")

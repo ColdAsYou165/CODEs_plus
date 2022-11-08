@@ -16,7 +16,7 @@ parser.add_argument("--gpus", default="0")
 parser.add_argument("--batch_size", type=int, default=128)
 parser.add_argument("--loss_virtual_weight", type=float, default=1, help="压制训练时候,loss_virtual的权重")
 # v5版本专用 选择ae参数
-parser.add_argument("--ae_version", type=int, default=5, help="ae权重版本,2为1e-8  3为1e-4 4为1e-5")
+parser.add_argument("--ae_version", type=int, default=16, help="ae权重版本,2为1e-8  3为1e-4 4为1e-5")
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
@@ -56,7 +56,7 @@ model_d.apply(weights_init)
 if args.ae_version < 12:
     model_g = AutoEncoder_Miao().cuda()
 elif args.ae_version > 11:
-    model_g = AutoEncoder_Miao_containy().cuda()
+    model_g = AutoEncoder_Miao_containy(num_classes).cuda()
 # model_g.apply(weights_init)
 # v5的state_g
 # 0,1为之前的两个,当时压制训练有一点效果,但是现在怀疑是那10%生成的正常样本带来的影响
@@ -64,6 +64,7 @@ elif args.ae_version > 11:
 # 8为weight 1e-5 epoch 1199
 # 9 10 11 分别为ae--epoch1199 blendweight分别为 1e-5颜色正常 1e-5颜色深 1e-6
 # 12 13 14为 containy的ae,训练ae时候的blendweight分别为 1 1e-3 1e-5
+# 15 containy的ae,训练ae的时候blendweight为1,lr2e-5,观察batch能生成正常的虚假图像
 if args.ae_version == 0:
     state_g = torch.load(
         f"../betterweights/ae_trained_by3loss_v0/ae_chamfer_and_wloss_and_crossloss--crossweight1e-4_epoch799.pth")[
@@ -123,6 +124,10 @@ elif args.ae_version == 13:
 elif args.ae_version == 14:
     state_g = torch.load(
         "/mnt/data/maxiaolong/CODEsSp/results/ae_containy_generatevirtual_v2_w1/argsbatch_size128--beta10.5--blend_loss_weight1e-05--epochs1800--gpus'2'--lr6e-05--lr_dis6e-05--method'train_generate_virtual'--w_loss_weight1/pthae_generatevirtual--epoch1799.pth")
+elif args.ae_version == 15:
+    state_g = torch.load("../betterweights/train_ae_containy/ae_generatevirtual--epoch999.pth")
+elif args.ae_version == 16:
+    state_g = torch.load("../betterweights/train_ae_containy/caixvjian.pth")
 model_g.load_state_dict(state_g)
 model_g.eval()
 
@@ -181,49 +186,59 @@ for epoch in range(args.epochs):
     # 训练
     model_d.train()
     loss_train_containv = 0
+    loss_virtual_all = 0
+    loss_normal_all = 0
     for batch_idx, (data, label) in enumerate(trainloader_cifar10):
         data = data.cuda()
         label = label.cuda()
         data_normal = data.detach()
         label_normal = F.one_hot(label, num_classes).detach().float()
         # data_virtual = model_g.module.generate_virtual(data).detach()
-        # 压制训练时候,虚假样本的label应该都是0.1,我设置错了.
         data_virtual, label_virtual = model_g.generate_virtual(data, label, set_encode_detach=True,
                                                                set_virtual_label_uniform=True)
         pred_normal = model_d(data_normal)
         loss_normal = criterion_cross(pred_normal, label_normal)
+        loss_normal_all += loss_normal.item()
         pred_virtual = model_d(data_virtual)
         loss_virtual = criterion_cross(pred_virtual, label_virtual)
+        loss_virtual_all += loss_virtual.item()
         loss = (loss_virtual + loss_normal).mean()
         optimizer_d.zero_grad()
         loss_normal.backward()
         (args.loss_virtual_weight * loss_virtual).backward()
         optimizer_d.step()
         loss_train_containv += loss.item()
+
+        #
         # 没啥用就是看一下ae生成看来咋样的虚假图像用于压制训练
-        if batch_idx < 10 and epoch % 40 == 0:
+        if True and epoch % 40 == 0:
             pic = torch.concat([data, data_virtual], dim=0)
             save_image(pic, results_pic_root + f"/virtualpic--epoch{epoch}--{batch_idx}.jpg")
 
     loss_train_containv /= len(trainloader_cifar10)
+    loss_virtual_all /= len(trainloader_cifar10)
+    loss_normal_all /= len(trainloader_cifar10)
     # 测试
-    mmc_cifar100 = get_mmc(model_d, testloader_cifar100)
-    mmc_svhn = get_mmc(model_d, testloader_svhn)
-    mmc_cifar10 = get_mmc(model_d, testloader_cifar10)
-    acc = get_acc(model_d, testloader_cifar10)
-    if acc > acc_std:
-        acc_std = acc
-        state_d = {"model": model_d.state_dict()}
-        torch.save(state_d,
-                   f"{results_root}/resnet18_yazhixunlian__acc{acc:.2f}__cimmc{mmc_cifar100:.2f}__svhnmmc{mmc_svhn}.pth")
-    writer.add_scalars("mmc", {"mmc_cifar10": mmc_cifar10, "mmc_cifar100": mmc_cifar100,
-                               "mmc_svhn": mmc_svhn}, epoch + 1)
-    writer.add_scalar("cifar10_acc", acc, epoch + 1)
-    writer.add_scalar("train_containv", loss_train_containv, epoch + 1)
-
-    print(f"epoch[{epoch}/{args.epochs}] : cifar10_test_acc={acc} , ", "mmc_test_cifar10=", mmc_cifar10)
-    print("loss_train_containv=", loss_train_containv, "mmc_cifar100=", mmc_cifar100, " , mmc_svhn=", mmc_svhn)
-    print("-" * 40)
-with open("./runs/mmc.txt", "a+") as results_file:
+    if True:
+        # 保存好的resnet权重,输出压制训练需要观察的mmc acc的值
+        mmc_cifar100 = get_mmc(model_d, testloader_cifar100)
+        mmc_svhn = get_mmc(model_d, testloader_svhn)
+        mmc_cifar10 = get_mmc(model_d, testloader_cifar10)
+        acc = get_acc(model_d, testloader_cifar10)
+        if acc > acc_std:
+            acc_std = acc
+            state_d = {"model": model_d.state_dict()}
+            torch.save(state_d,
+                       f"{results_root}/resnet18_yazhixunlian__acc{acc:.2f}__cimmc{mmc_cifar100:.2f}__svhnmmc{mmc_svhn}.pth")
+        writer.add_scalars("mmc", {"mmc_cifar10": mmc_cifar10, "mmc_cifar100": mmc_cifar100,
+                                   "mmc_svhn": mmc_svhn}, epoch + 1)
+        writer.add_scalar("cifar10_acc", acc, epoch + 1)
+        writer.add_scalar("train_containv", loss_train_containv, epoch + 1)
+        writer.add_scalars("loss", {"loss_norm": loss_normal_all, "loss_virtual": loss_virtual_all}, epoch)
+        print(f"[{epoch}/{args.epochs}]:loss_norm={loss_normal_all},loss_vir={loss_virtual_all}")
+        print(f"epoch[{epoch}/{args.epochs}] : cifar10_test_acc={acc} , ", "mmc_test_cifar10=", mmc_cifar10)
+        print("loss_train_containv=", loss_train_containv, "mmc_cifar100=", mmc_cifar100, " , mmc_svhn=", mmc_svhn)
+        print("-" * 40)
+with open("./runs/mmc_ae_containy.txt", "a+") as results_file:
     results_file.write(
-        f"--lossweight{args.loss_virtual_weight}--ae_version{args.ae_version} : acc={acc},mmc_cifar10={mmc_cifar10},mmc_cifar100={mmc_cifar100},mmc_svhn={mmc_svhn}\r\n")
+        f"--lossweight{args.loss_virtual_weight},--ae_version{args.ae_version} : ,acc={acc},mmc_cifar10={mmc_cifar10},mmc_cifar100={mmc_cifar100},mmc_svhn={mmc_svhn}\r\n")
