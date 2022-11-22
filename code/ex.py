@@ -12,7 +12,7 @@ import torch
 import numpy as np
 import torchvision
 from torch.utils.data import DataLoader
-from model import AutoEncoder_Miao
+from model import *
 from utils import *
 from torchvision.utils import save_image
 
@@ -252,18 +252,76 @@ print(y)'''
 #
 # save_image(x,"./sad.png")
 # x = torch.tensor([i for i in range(40)]).reshape(4, 10).float().softmax(dim=1)
-x=torch.rand([4,10],requires_grad=True).softmax(dim=1)
-y = torch.tensor([0, 1, 2, 3])
-print(x,y)
-'''# print(x)
-y = F.one_hot(y, 10)
-print(x)
-print(y)
-z = (x * y).sum(dim=1)
-z=torch.where(z>0.1,z-0.1,0)
-print(z)
-z=z.mean()
-print(z)
-z.backward()'''
+# x=torch.rand([4,10],requires_grad=True).softmax(dim=1)
+# y = torch.tensor([0, 1, 2, 3])
+# print(x,y)
+# '''# print(x)
+# y = F.one_hot(y, 10)
+# print(x)
+# print(y)
+# z = (x * y).sum(dim=1)
+# z=torch.where(z>0.1,z-0.1,0)
+# print(z)
+# z=z.mean()
+# print(z)
+# z.backward()'''
+#
+# get_tang_loss(x,y,10)
+# weight_0 = torch.rand([100, 1], dtype=torch.float32).uniform_(0.2, 0.8)
+# print(weight_0)
+'''x=torch.tensor([1,2,3,4]).reshape([-1,1])
+y=torch.tensor([i for i in range(16)]).reshape([4,4])
 
-get_tang_loss(x,y,10)
+print(x*y)'''
+'''net_d=DCGAN_D(isize=32,nz=100,nc=3,ndf=64,ngpu=1)
+x=torch.rand([4,3,32,32])
+y=net_d(x)
+print(y.shape)'''
+'''print(os.listdir("/mnt/data/maxiaolong/results"))
+os.makedirs("/mnt/data/maxiaolong/results/happy")'''
+# get_filename()
+'''# 两张量相混合
+data1=torch.arange(0,64).view([2,4,4,2])
+data2=-torch.arange(64,128).view([2,4,4,2])
+# index=[1,2,1,2]
+# index=torch.randint(0,2,data1.shape)
+index1=torch.tensor([0,1,2,1]).reshape(1,4,1,1)
+index2=1-index1
+# print(x)
+data1,data2=data1*index1+data2*index2,data1*index2+data2*index1
+print(data1)
+print("-------")
+print(data2)'''
+# index=torch.randint(0,3,[8])
+# index=torch.where(torch.randint(0,3,[9])==0,0,1)
+# print(index)
+# index=torch.where(torch.randint(0,3,[9])==0,0,1)
+# data=torch.where(index==1,data1,data2)
+# print(data1)
+'''index=torch.arange(0,8)
+setup_seed(1)
+class MODEL(nn.Module):
+    def __init__(self):
+        super(MODEL, self).__init__()
+        self.l1=nn.Linear(8,4)
+        self.l2=nn.Linear(4,2)
+    def forward(self,x):
+        o=self.l1(x)
+        print(o)
+        # o=torch.where(o>0,o,-4)
+        o=self.l2(o)
+        return o
+model=MODEL()
+data=torch.arange(0,16).view(2,8).float()
+y=model(data).mean()
+y.backward()
+# print(y.grad)
+# print(data.grad)
+print(model.l2.weight.grad)'''
+'''data=torch.arange(0,64).view(4,4,2,2)
+x=torch.tensor([0,1,-1,0, 1,1,1,1, 0,0,0,1, -1,-1,-1,-1]).view([4,4,1,1])
+o=data*x
+print(o,o.shape)
+torch.randin'''
+# x=torch.arange(0,10)
+print(x)

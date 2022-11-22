@@ -539,7 +539,95 @@ b=9
 #python train_ae_containy.py --gpus 5 --seed 22 &
 #python train_ae_containy.py --gpus 6 --seed 2022 &
 #python train_ae_containy.py --gpus 7 --seed 84 &
-python train_resnet_byvirtual.py --gpus 1 --loss_virtual_weight 1 &
-python train_resnet_byvirtual.py --gpus 2 --loss_virtual_weight 0.1 &
-python train_resnet_byvirtual.py --gpus 3 --loss_virtual_weight 1e-3 &
-python train_resnet_byvirtual.py --gpus 0 --loss_virtual_weight 1e-5 &
+#python train_resnet_byvirtual.py --gpus 1 --loss_virtual_weight 1 &
+#python train_resnet_byvirtual.py --gpus 2 --loss_virtual_weight 0.1 &
+#python train_resnet_byvirtual.py --gpus 3 --loss_virtual_weight 1e-3 &
+#python train_resnet_byvirtual.py --gpus 0 --loss_virtual_weight 1e-5 &
+#python train_ae_containy_withtangloss.py --gpus 1 --nocontent_loss_weight 1e-9 &
+#python train_ae_containy_withtangloss.py --gpus 2 --nocontent_loss_weight 1e-13 &
+#python train_ae_containy_withtangloss.py --gpus 3 --nocontent_loss_weight 1e-15 &
+#python train_ae_containy_withtangloss.py --gpus 4 --nocontent_loss_weight 1e-20 &
+#python train_ae_containy_withtangloss.py --gpus 5 --nocontent_loss_weight 1e-7 &
+#python train_ae_containy_withtangloss.py --gpus 2 --lr 6e-4 &
+#python train_ae_containy_withtangloss.py --gpus 3 --lr 6e-5 &
+#python train_ae_containy_withtangloss.py --gpus 3 --lr 6e-3 &
+#python train_ae_containy_withtangloss.py --gpus 1 --blend_loss_weight 1 --w_loss_weight 1 &
+#python train_ae_containy_withtangloss.py --gpus 1 --blend_loss_weight 1e-3 --w_loss_weight 1 &
+#python train_ae_containy_withtangloss.py --gpus 2 --blend_loss_weight 1 --w_loss_weight 1e-3 &
+#python train_ae_containy_withtangloss.py --gpus 2 --blend_loss_weight 1 --w_loss_weight 1e-5 &
+#python train_ae_containy_withtangloss.py --gpus 3 --blend_loss_weight 1e-5 --w_loss_weight 1 &
+#
+#python train_ae_containy_withtangloss.py --gpus 3 --blend_loss_weight 1 --w_loss_weight 1 --lr 6e-4 --lr_dis 6e-4 &
+#python train_ae_containy_withtangloss.py --gpus 2 --blend_loss_weight 1e-3 --w_loss_weight 1 --lr 6e-4 --lr_dis 6e-4 &
+#python train_ae_containy_withtangloss.py --gpus 3 --blend_loss_weight 1 --w_loss_weight 1e-3 --lr 6e-4 --lr_dis 6e-4 &
+
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1 --gpus 2 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1 --gpus 4 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1 --gpus 5 &
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1e-1 --gpus 2 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1e-1 --gpus 4 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1e-1 --gpus 5 &
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1e-2 --gpus 3 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1e-2 --gpus 4 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1e-2 --gpus 5 &
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1e-3 --gpus 6 &
+#wait
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1e-3 --gpus 2 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1e-3 --gpus 3 &
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1e-5 --gpus 4 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1e-5 --gpus 5 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1e-5 --gpus 6 &
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1 --gpus 2 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1 --gpus 3 &
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1e-1 --gpus 4 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1e-1 --gpus 5 &
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1e-2 --gpus 6 &
+#wait
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1e-2 --gpus 2 &
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1e-3 --gpus 3 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1e-3 --gpus 4 &
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1 --gpus 5 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1e-1 --gpus 6 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1e-5 --gpus 2 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1e-2 --gpus 3 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1e-5 --gpus 4 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1e-3 --gpus 5 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1e-5 --gpus 6 &
+
+#python train_ae_containy_withtangloss.py --gpus 0 --blend_loss_weight 1 --w_loss_weight 1 &
+#python train_ae_containy_withtangloss.py --gpus 1 --blend_loss_weight 1e-3 --w_loss_weight 1 &
+#python train_ae_containy_withtangloss.py --gpus 2 --blend_loss_weight 1 --w_loss_weight 1e-3 &
+#python train_ae_containy_withtangloss.py --gpus 3 --blend_loss_weight 1 --w_loss_weight 1e-5 &
+#python train_ae_containy_withtangloss.py --gpus 4 --blend_loss_weight 1e-5 --w_loss_weight 1 &
+#python train_ae_containy_withtangloss.py --gpus 5 --blend_loss_weight 1 --w_loss_weight 1 --lr 6e-4 --lr_dis 6e-4 &
+#python train_ae_containy_withtangloss.py --gpus 4 --blend_loss_weight 1e-3 --w_loss_weight 1 --lr 6e-4 --lr_dis 6e-4 &
+#python train_ae_containy_withtangloss.py --gpus 5 --blend_loss_weight 1 --w_loss_weight 1e-3 --lr 6e-4 --lr_dis 6e-4 &
+
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1 --gpus 2 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1 --gpus 4 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1 --gpus 5 &
+#
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 0 --loss_virtual_weight 1e-1 --gpus 2 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 1 --loss_virtual_weight 1e-1 --gpus 4 &
+#python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --ae_version 2 --loss_virtual_weight 1e-1 --gpus 5 &
+python train_ae_chromosome.py --gpus 0 --scale 8 &
+python train_ae_chromosome.py --gpus 1 --scale 4 &
+python train_ae_chromosome.py --gpus 2 --scale 2 &
+python train_ae_chromosome.py --gpus 0 --scale 8 --w_loss_weight 1e-1 &
+python train_ae_chromosome.py --gpus 1 --scale 4 --w_loss_weight 1e-1 &
+python train_ae_chromosome.py --gpus 2 --scale 2 --w_loss_weight 1e-1 &
+
+python train_ae_chromosome.py --gpus 4 --scale 4 --w_loss_weight 1e-3 &
+python train_ae_chromosome.py --gpus 5 --scale 2 --w_loss_weight 1e-3 &
+python train_ae_chromosome.py --gpus 4 --scale 4 --w_loss_weight 1e-5 &
+python train_ae_chromosome.py --gpus 5 --scale 2 --w_loss_weight 1e-5 &

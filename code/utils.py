@@ -354,7 +354,7 @@ def getLogger(formatter_str=None, root_filehandler=None):
     return logger
 
 
-def getResultDir(name_project, name_args, results_root=f"../results"):
+def getResultDir(name_project, name_args, results_root=f"../results", ):
     '''
     创建实验相应目录
     :param name_project:
@@ -373,6 +373,7 @@ def getResultDir(name_project, name_args, results_root=f"../results"):
     results_pth_root = results_root + "/pth"
     os.makedirs(results_pic_root, exist_ok=True)
     os.makedirs(results_pth_root, exist_ok=True)
+    os.makedirs(results_root + "/runs", exist_ok=True)
     return results_root, (results_pth_root, results_pic_root)
 
 
@@ -416,6 +417,11 @@ def get_tang_loss(pred, label, num_classes):
     output = torch.where(output < 0, 0, output)
     output = output.mean()
     return output
+
+
+def get_filename():
+    print(__file__)
+    return __file__
 
 
 if __name__ == "__main__":
