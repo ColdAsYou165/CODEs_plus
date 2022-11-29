@@ -12,9 +12,11 @@ import torch.nn as nn
 import torch.nn.init as init
 import torch
 import torchvision.transforms as transforms
+import torchvision.utils as vutils
 import torch.nn.functional as F
 import numpy as np
 import random
+import socket
 
 # criterion
 criterion_mse = torch.nn.MSELoss().cuda()
@@ -362,8 +364,6 @@ def getResultDir(name_project, name_args, results_root=f"../results", ):
     :param results_root:"../results"
     :return:
     '''
-    # name_project = f"ae_containy_reconstruct_v1"
-    # name_args = get_args_str(args)
     results_root = f"{results_root}/{name_project}/{name_args}"
     os.makedirs(results_root, exist_ok=True)
     file = open(results_root + "/args.txt", "w")
@@ -420,8 +420,26 @@ def get_tang_loss(pred, label, num_classes):
 
 
 def get_filename():
+    '''
+    打印的是该函数所在文件的__file__
+    :return:
+    '''
     print(__file__)
     return __file__
+
+
+def imshow(data, label=None):
+    import matplotlib.pyplot as plt
+    classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+    if len(data.shape) == 3:
+        data = data.reshape([1, -1, -1, -1])
+    data = vutils.make_grid(data)
+    data = data.permute(1, 2, 0)
+    data = data.detach().cpu().numpy()
+    plt.imshow(data)
+    plt.show()
+    if label is not None:
+        print(label.cpu().numpy())
 
 
 if __name__ == "__main__":

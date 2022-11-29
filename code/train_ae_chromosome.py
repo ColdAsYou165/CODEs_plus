@@ -44,7 +44,8 @@ from models import resnet_orig
 # 起势
 # 不带v的为实验版本
 # 目前吧scale改成2 blendloss为1生成的还是像正常样本,所以调小wloss的权重
-name_project = "train_ae_chromosome_v1"
+# v3 鉴别器优化器从Adam换成RMSprop
+name_project = "train_ae_chromosomev3"
 args_str = get_args_str(args)
 root_result, (root_pth, root_pic) = getResultDir(name_project=name_project,
                                                  name_args=args_str)
@@ -83,10 +84,13 @@ model_d.load_state_dict(state_d)
 # 优化器
 criterion_blend = torch.nn.CrossEntropyLoss().cuda()
 optimizer_g = torch.optim.Adam(model_g.parameters(), lr=args.lr)
-optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=args.lr_dis, betas=(args.beta1, 0.999))
+# optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=args.lr_dis, betas=(args.beta1, 0.999))
+optimizer_discriminator = torch.optim.RMSprop(discriminator.parameters(), lr=args.lr_dis)
 
 origin_data, origin_label = next(iter(trainloader_cifar10))
 origin_data, origin_label = origin_data.cuda(), origin_label.cuda()
+# torch.save({"data": origin_data, "label": origin_label}, "../data/onebatch_cifar10.pt")
+# print(f"保存成功")
 origin_label = F.one_hot(origin_label, num_classes).float()
 origin_reconstruct = model_g(origin_data)
 save_image(torch.concat([origin_data, origin_reconstruct], dim=0), root_pic + "/origin.jpg")
@@ -125,17 +129,16 @@ for epoch in range(args.epochs):
         optimizer_g.zero_grad()
         ## wloss
         output_wantreal = discriminator(virtual_data)
-        (args.w_loss_weight * output_wantreal).backward(retain_graph=True)  # 希望生成的virtual像真的,real为0
+        # (args.w_loss_weight * output_wantreal).backward(retain_graph=True)  # 希望生成的virtual像真的,real为0
         loss_w_all += output_wantreal.item()
 
         ## blendwloss
         pred = model_d(virtual_data)
         loss_blend = criterion_blend(pred, virtual_label)
         # (args.blend_loss_weight * loss_blend).backward(retain_graph=True)
-        (args.blend_loss_weight * loss_blend).backward()
+        (args.w_loss_weight * output_wantreal + args.blend_loss_weight * loss_blend).backward()
         loss_blend_all += loss_blend.item()
 
-        ## chamferloss
         optimizer_g.step()
     # 观察量
     pred_real_all /= len(trainloader_cifar10)

@@ -2,6 +2,7 @@ import datetime
 import os
 import argparse
 import sys
+import socket
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--gpus", default="0")
@@ -324,4 +325,24 @@ o=data*x
 print(o,o.shape)
 torch.randin'''
 # x=torch.arange(0,10)
-print(x)
+# print(x)
+# ip = socket.gethostbyname(socket.gethostname())
+# ip = socket.gethostname()
+# print(ip)
+# a,(b,c)=getResultDir(name_project="ex",name_args="v2")
+
+'''
+# 随便两张图混合到一起长什么样子
+data = torch.load("../data/onebatch_cifar10.pt", map_location=torch.device('cpu'))
+data, label = data["data"].cpu(), data["label"].cpu()
+index = torch.randint(0,1, [3, 32, 32])
+index = torch.where(index == 0, 0, 1)
+x, y = data[0], data[1]
+data = x * index + y * (1 - index)
+print(data.shape, label.shape)
+imshow(data, label)'''
+data=torch.load("../data/onebatch_cifar10.pt")
+data,label=data["data"],data["label"]
+data,label=data[:6],label[:6]
+print(data.shape,label.shape)
+imshow(data,label)

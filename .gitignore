@@ -1,6 +1,7 @@
-betterweights
-results
-result
-runs
-log
-.gitignore
+#忽略所有文件
+*
+!.gitignore
+!*.py
+!*.ipynb
+!*.md
+!/code
