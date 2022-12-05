@@ -32,19 +32,21 @@ from torchvision.utils import save_image
 import sys
 from model import *
 from models import resnet_orig
+from models.ae_miao_chromosome import *
 from utils import *
 
-name_project = "train_resnet_by_virtual_generated_by_aecontainywithtangloss_v4_2"
+name_project = "train_resnet_by_virtual_generated_by_aecrossover/v1"
 args_str = get_args_str(args)
 root_result, (root_pth, root_pic) = getResultDir(name_project=name_project, name_args=args_str)
 log = getLogger(formatter_str=None, root_filehandler=root_result + f"/logger.log")
 log.info(str(args))
+log.info("交叉1/8每次,使用tangloss替代blendloss")
 seed = random.randint(0, 2022)
 setup_seed(seed)
 log.info(f"seed={seed}")
 
 # 起势
-name_runs = f"{root_result}+/runs"
+name_runs = f"{root_result}" + "/runs"
 writer = SummaryWriter(name_runs)
 writer.add_text("args", str(args))
 
@@ -53,9 +55,10 @@ num_classes = 10
 model_d = resnet_orig.ResNet18(num_classes=num_classes).cuda()
 model_d.apply(weights_init)
 
-model_g = AutoEncoder_Miao_containy(num_classes).cuda()
+# model_g = AutoEncoder_Miao_containy(num_classes).cuda()
+model_g = AutoEncoder_Miao_crossover_tangloss(num_classes).cuda()
 #
-if args.ae_version == 0:
+'''if args.ae_version == 0:
     root_ae = "../betterweights/ae_containy_withtangloss-generatevirtual_v4/ae_b1w1.pth"
     state_g = torch.load(root_ae)
 elif args.ae_version == 1:
@@ -63,6 +66,12 @@ elif args.ae_version == 1:
     state_g = torch.load(root_ae)
 elif args.ae_version == 2:
     root_ae = "../betterweights/ae_containy_withtangloss-generatevirtual_v4/ae_b1e-3w1.pth"
+    state_g = torch.load(root_ae)'''
+if args.ae_version == 0:
+    root_ae = "../betterweights/train_ae_chromosome_blend2tangloss/ae_generatevirtual--tang1--epoch1799.pth"
+    state_g = torch.load(root_ae)
+elif args.ae_version == 1:
+    root_ae = "../betterweights/train_ae_chromosome_blend2tangloss/ae_generatevirtual--tang1e-5--epoch1799.pth"
     state_g = torch.load(root_ae)
 model_g.load_state_dict(state_g)
 model_g.eval()
@@ -128,8 +137,9 @@ for epoch in range(args.epochs):
         label_normal = F.one_hot(label, num_classes).detach().float()
         # data_virtual = model_g.module.generate_virtual(data).detach()
         # 压制训练时候,虚假样本的label应该都是0.1,我设置错了.
-        data_virtual, label_virtual = model_g.generate_virtual_v2(data, label, set_encoded_detach=False,
-                                                                  train_generate=False)
+        data_virtual, label_virtual = model_g.generate_virtual(data, label, set_differentlabel=True,
+                                                               set_originlabel=False, set_virtuallabel_uniform=True,
+                                                               scale=8)
         data_virtual = data_virtual.detach()
         pred_normal = model_d(data_normal)
         loss_normal = criterion(pred_normal, label_normal)

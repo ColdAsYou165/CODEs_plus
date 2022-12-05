@@ -341,8 +341,17 @@ x, y = data[0], data[1]
 data = x * index + y * (1 - index)
 print(data.shape, label.shape)
 imshow(data, label)'''
-data=torch.load("../data/onebatch_cifar10.pt")
+'''data=torch.load("../data/onebatch_cifar10.pt")
 data,label=data["data"],data["label"]
 data,label=data[:6],label[:6]
 print(data.shape,label.shape)
-imshow(data,label)
+imshow(data,label)'''
+x = torch.tensor([[0.1, 0.2, 0.3, 0.4], [0.1, 0.2, 0.3, 0.4]])
+y = torch.tensor([[0, 0, 0.5, 0.5], [0, 0.5, 0, 0.5]])
+'''z=x*y
+z=z-0.1
+z=torch.max(z,torch.tensor(0)).sum(dim=1).mean()
+print(z)'''
+z=get_tangloss_by_blendlabel(x, y)
+print(z)
+

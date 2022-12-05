@@ -19,7 +19,7 @@ parser.add_argument("--lr_dis", type=float, default=6e-5, help='对抗分类器�
 
 parser.add_argument("--w_loss_weight", type=float, default=1, help="miaoshixiong 1e-5")  # 训练aegenerate virtual时用的
 parser.add_argument("--tang_loss_weight", type=float, default=1., help="")
-parser.add_argument("--scale", type=int, default=4, help="crossover的比例为1/scale")
+parser.add_argument("--scale", type=int, default=8, help="crossover的比例为1/scale")
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
@@ -42,7 +42,8 @@ from utils import *
 from models import resnet_orig
 
 # 起势
-name_project = "train_ae_chromosome_blend2tangloss/v1"
+# 从v2开始,换成由父母label计算tangloss
+name_project = "train_ae_chromosome_blend2tangloss83/v2"
 args_str = get_args_str(args)
 root_result, (root_pth, root_pic) = getResultDir(name_project=name_project,
                                                  name_args=args_str)
@@ -79,7 +80,6 @@ state_d = torch.load("../betterweights/resnet18_baseline_trainedbymiao_acc0.9532
 model_d.load_state_dict(state_d)
 
 # 优化器
-criterion_blend = torch.nn.CrossEntropyLoss().cuda()
 optimizer_g = torch.optim.Adam(model_g.parameters(), lr=args.lr)
 # optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=args.lr_dis, betas=(args.beta1, 0.999))
 optimizer_discriminator = torch.optim.RMSprop(discriminator.parameters(), lr=args.lr_dis)
@@ -87,7 +87,6 @@ optimizer_discriminator = torch.optim.RMSprop(discriminator.parameters(), lr=arg
 origin_data, origin_label = next(iter(trainloader_cifar10))
 origin_data, origin_label = origin_data.cuda(), origin_label.cuda()
 # torch.save({"data": origin_data, "label": origin_label}, "../data/onebatch_cifar10.pt")
-# print(f"保存成功")
 origin_label = F.one_hot(origin_label, num_classes).float()
 origin_reconstruct = model_g(origin_data)
 save_image(torch.concat([origin_data, origin_reconstruct], dim=0), root_pic + "/origin.jpg")
@@ -130,16 +129,9 @@ for epoch in range(args.epochs):
         # (args.w_loss_weight * output_wantreal).backward(retain_graph=True)  # 希望生成的virtual像真的,real为0
         loss_w_all += output_wantreal.item()
 
-        '''## blendwloss
-        pred = model_d(virtual_data)
-        loss_blend = criterion_blend(pred, virtual_label)
-        # (args.blend_loss_weight * loss_blend).backward(retain_graph=True)
-        (args.w_loss_weight * output_wantreal + args.blend_loss_weight * loss_blend).backward()
-        loss_blend_all += loss_blend.item()
-        '''
         # tangloss
-        pred = model_d(virtual_data)
-        loss_tang = get_tang_loss(pred, virtual_label, num_classes=num_classes)
+        pred = model_d(virtual_data).softmax(dim=1)
+        loss_tang = get_tangloss_by_blendlabel(pred, virtual_label)
         (args.w_loss_weight * output_wantreal + args.tang_loss_weight * loss_tang).backward()
         optimizer_g.step()
     # 观察量
@@ -149,7 +141,7 @@ for epoch in range(args.epochs):
     loss_tang_all /= len(trainloader_cifar10)
     log.info(
         f"train[{epoch}/{args.epochs}] : pred_real={pred_real_all:.2f}, pred_virtual={pred_virtual_all:.2f}, "
-        + f"loss_w={loss_w_all:.4f}, loss_tang={loss_tang_all:.4f}")
+        + f"loss_w={loss_w_all:.4f}, loss_tang={loss_tang_all}")
     save_image(torch.concat([data, virtual_data], dim=0),
                root_pic + f"/ae_chromosome_trainedtogeneratevirtual--epoch{epoch}.jpg")
     if True and (epoch + 1) % 200 == 0:

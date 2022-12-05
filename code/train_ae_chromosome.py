@@ -45,11 +45,13 @@ from models import resnet_orig
 # 不带v的为实验版本
 # 目前吧scale改成2 blendloss为1生成的还是像正常样本,所以调小wloss的权重
 # v3 鉴别器优化器从Adam换成RMSprop
-name_project = "train_ae_chromosomev3"
+# v481 换成可学习参数
+name_project = "train_ae_chromosomev481"
 args_str = get_args_str(args)
 root_result, (root_pth, root_pic) = getResultDir(name_project=name_project,
                                                  name_args=args_str)
 log = getLogger(formatter_str=None, root_filehandler=root_result + f"/logger.log")
+log.info("v481 换成可学习参数")
 log.info(str(args))
 # writter = SummaryWriter(f"{root_result}/runs/run{datetime.now().strftime('%y-%m-%d,%H-%M-%S')}")
 seed = random.randint(0, 2022)

@@ -369,7 +369,7 @@ class AutoEncoder_Miao_crossover_learnebalecrossover(nn.Module):
             stride=1,  # filter movement/step
             padding=1,
         ), nn.Sigmoid())
-
+        
     def encoder(self, x):
         x = self.conv1(x)  # 16,32,32
         x = self.conv2(x)  # 32,16,16
@@ -681,6 +681,7 @@ class AutoEncoder_Miao_crossover_tangloss(nn.Module):
         :param label:
         :param set_differentlabel: 父母类别是否限制different
         :param set_virtuallabel_uniform: 压制训练时候设置均匀标签,true的时候virtual_data也会detach
+        :param set_originlabel: 返回的是图像原始的标签
         :return: virtual_data, virtual_label.detach()
         '''
         encoded = self.encoder(data)  # [batch, 64, 8, 8]
