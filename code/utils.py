@@ -412,10 +412,24 @@ def get_tang_loss(pred, label, num_classes):
     '''
     if len(label.shape) == 1:
         label = F.one_hot(label, num_classes)
-    assert label.shape != [len(pred), num_classes]
+    assert label.shape == pred.shape
     output = (pred * label).sum(dim=1) - 0.1
     output = torch.where(output < 0, 0, output)
     output = output.mean()
+    return output
+
+
+def get_tangloss_by_blendlabel(pred, label):
+    '''
+    :param pred:分类器预测值,输入前应经过softmax
+    :param label: blendlabel,
+    :return: 一个batch计算的均值
+    '''
+    # print(label.shape==torch.Size([len(pred),num_classes]))
+    assert label.shape == pred.shape
+    output = pred * label - 0.1
+    output = torch.max(output, torch.tensor(0))
+    output = output.sum(dim=1).mean()
     return output
 
 

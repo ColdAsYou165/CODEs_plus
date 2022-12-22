@@ -250,6 +250,51 @@ class AutoEncoder_Miao_crossover(nn.Module):
 
         return virtual_data0, virtual_data1
 
+    ##########
+    def generate_virtual_anquanzhong(self, data, label, set_differentlabel, set_virtuallabel_uniform, scale,
+                                     set_test=False):
+        '''
+        附带设置父母类别种类不一样
+        生成虚假样本
+        :param data:
+        :param label:
+        :param set_differentlabel: 父母类别是否限制different
+        :param set_virtuallabel_uniform: 压制训练时候设置均匀标签,true的时候virtual_data也会detach
+        :return: virtual_data, virtual_label.detach()
+        '''
+        weight_scale = 1 - 1 / scale
+        encoded = self.encoder(data)  # [batch, 64, 8, 8]
+        # 索引
+        index1 = torch.arange(0, len(encoded)).cuda()
+        index2 = torch.randperm(len(encoded)).cuda()
+        if set_differentlabel:
+            # 删去相同类
+            index_notequal = label[index1] != label[index2]
+            index1 = index1[index_notequal]
+            index2 = index2[index_notequal]
+
+        # 虚假样本
+        z1 = encoded[index1].detach()
+        z2 = encoded[index2].detach()
+        virtual_data1, virtual_data2 = self.decoder_virtual(z1, z2, scale=scale)
+        virtual_data = torch.concat([virtual_data1, virtual_data2], dim=0)
+
+        # 虚假标签
+        virtual_label = F.one_hot(label, self.num_classes)
+        virtual_label = weight_scale * virtual_label[index1] + (1 / scale) * virtual_label[index2]
+        virtual_label = torch.concat([virtual_label, virtual_label], dim=0)
+
+        # True则设置virtual_label为均匀
+        if set_virtuallabel_uniform:
+            # 如果为压制训练,则返回的virtual_data应detach
+            virtual_data = virtual_data.detach()
+            # 如果为压制训练,则virtual_laebl设置为都是1/num_classes
+            virtual_label = (torch.ones([len(virtual_data), self.num_classes]) / self.num_classes).cuda()
+        if not set_test:
+            return virtual_data, virtual_label
+        else:
+            return data[index1], data[index2], label[index1], label[index2], virtual_data1, virtual_data2, virtual_label
+
 
 class AutoEncoder_Miao_crossover_learnebalecrossover(nn.Module):
     '''
@@ -681,6 +726,7 @@ class AutoEncoder_Miao_crossover_tangloss(nn.Module):
         :param label:
         :param set_differentlabel: 父母类别是否限制different
         :param set_virtuallabel_uniform: 压制训练时候设置均匀标签,true的时候virtual_data也会detach
+        :param set_originlabel: 返回的是图像原始的标签
         :return: virtual_data, virtual_label.detach()
         '''
         encoded = self.encoder(data)  # [batch, 64, 8, 8]

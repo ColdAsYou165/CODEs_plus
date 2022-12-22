@@ -9,11 +9,11 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--epochs", type=int, default=200, help="这个就不调整了,就默认200")
-parser.add_argument("--gpus", default="0")
+parser.add_argument("--gpus", default="5")
 parser.add_argument("--batch_size", type=int, default=128)
 parser.add_argument("--loss_virtual_weight", type=float, default=1, help="压制训练时候,loss_virtual的权重")
-parser.add_argument("--ae_version", type=int, default=3, help="ae权重版本")
-parser.add_argument("--scale", type=int, default=8)
+parser.add_argument("--ae_version", type=int, default=4, help="ae权重版本")
+parser.add_argument("--scale", type=int, default=4)
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = args.gpus
 
@@ -36,7 +36,8 @@ from models.ae_miao_chromosome import *
 from utils import *
 
 # /v3新加单个类别tyangloss训练的
-name_project = "train_resnet_by_virtual_generated_by_aetrainedbychromosomev3"
+# v4随便试
+name_project = "train_resnet_by_virtual_generated_by_aetrainedbychromosomev5_83"
 args_str = get_args_str(args)
 root_result, (root_pth, root_pic) = getResultDir(name_project=name_project, name_args=args_str)
 log = getLogger(formatter_str=None, root_filehandler=root_result + f"/logger.log")
@@ -46,7 +47,7 @@ setup_seed(seed)
 log.info(f"seed={seed}")
 
 # 起势
-name_runs = f"{root_result}+/runs"
+name_runs = f"{root_result}" + "/runs"
 os.makedirs(name_runs, exist_ok=True)
 writer = SummaryWriter(name_runs)
 writer.add_text("args", str(args))
@@ -59,16 +60,22 @@ model_d.apply(weights_init)
 model_g = AutoEncoder_Miao_crossover(num_classes).cuda()
 #
 if args.ae_version == 0:
-    root_ae = "../betterweights/ae_trainedbychromosome/ae_generatevirtual--scale2--wloss1e-3--epoch1799.pth"
+    root_ae = "../weights_ex/ae_chromsome_suibianshi/ae_generatevirtual--epoch399.pth"
     state_g = torch.load(root_ae)
 elif args.ae_version == 1:
-    root_ae = "../betterweights/ae_trainedbychromosome/ae_generatevirtual--scale2--wloss1e-3--epoch1599.pth"
+    root_ae = "../weights_ex/ae_chromsome_suibianshi/ae_generatevirtual--epoch599.pth"
     state_g = torch.load(root_ae)
 elif args.ae_version == 2:
-    root_ae = "../betterweights/ae_trainedbychromosome/ae_generatevirtual----scale4--wloss1e-1--epoch1199.pth"
+    root_ae = "../weights_ex/ae_chromsome_suibianshi/ae_generatevirtual--epoch799.pth"
     state_g = torch.load(root_ae)
 elif args.ae_version == 3:
-    root_ae = "../results/train_ae_chromosome_blend2tangloss/v1/argsbatch_size128--beta10.5--epochs1800--gpus'4'--lr6e-05--lr_dis6e-05--scale8--tang_loss_weight1.0--w_loss_weight1/pth/ae_generatevirtual--epoch1799.pth"
+    root_ae = "../weights_ex/ae_chromsome_suibianshi/ae_generatevirtual--epoch1199.pth"
+    state_g = torch.load(root_ae)
+elif args.ae_version == 4:
+    root_ae = "../weights_ex/ae_chromsome_suibianshi/ae_generatevirtual--epoch1599.pth"
+    state_g = torch.load(root_ae)
+elif args.ae_version == 5:
+    root_ae = "../weights_ex/ae_chromsome_suibianshi/ae_generatevirtual--epoch1799.pth"
     state_g = torch.load(root_ae)
 model_g.load_state_dict(state_g)
 model_g.eval()
@@ -134,8 +141,12 @@ for epoch in range(args.epochs):
         label_normal = F.one_hot(label, num_classes).detach().float()
         # data_virtual = model_g.module.generate_virtual(data).detach()
         # 压制训练时候,虚假样本的label应该都是0.1,我设置错了.
-        data_virtual, label_virtual = model_g.generate_virtual(data, label, set_differentlabel=True,
-                                                               set_virtuallabel_uniform=True, scale=args.scale)
+        data_virtual, label_virtual = model_g.generate_virtual_anquanzhong(data, label, set_differentlabel=True,
+                                                                           set_virtuallabel_uniform=True, scale=args.scale)
+        # 两行代码完成mixup
+        index_mixup = torch.randperm(len(data_virtual))
+        data_virtual = 0.5 * data_virtual + 0.5 * data_virtual[index_mixup]
+
         data_virtual = data_virtual.detach()
         pred_normal = model_d(data_normal)
         loss_normal = criterion(pred_normal, label_normal)
@@ -169,8 +180,9 @@ for epoch in range(args.epochs):
 
     log.info(f"epoch[{epoch}/{args.epochs}] : cifar10_test_acc={acc},mmc_test_cifar10={mmc_cifar10}")
     log.info(f"\tloss_train_containv={loss_train_containv},mmc_cifar100={mmc_cifar100},mmc_svhn={mmc_svhn}")
+    log.info(f"loss_normal={loss_normal},loss_virtual={loss_virtual}")
     log.info("-" * 40)
-with open(f"./runs/{name_project}.txt", "a+") as results_file:
+with open(f"../results/{name_project}/{name_project}.txt", "a+") as results_file:
     # results_file.write(f"{args}\r\n")
     results_file.write(
         f"--lossweight{args.loss_virtual_weight}--ae_version{args.ae_version} : acc={acc},mmc_cifar10={mmc_cifar10},mmc_cifar100={mmc_cifar100},mmc_svhn={mmc_svhn}\r\n")
