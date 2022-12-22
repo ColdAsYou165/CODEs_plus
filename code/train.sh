@@ -677,17 +677,22 @@ b=9
 #python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --gpus 1 --ae_version 1 --loss_virtual_weight 1e-4 &
 #python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --gpus 2 --ae_version 0 --loss_virtual_weight 1e-5 &
 #python train_resnet_by_virtual_generated_by_aecontainywithtangloss.py --gpus 3 --ae_version 1 --loss_virtual_weight 1e-5 &
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 0 --ae_version 0 --loss_virtual_weight 1 &
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 1 --ae_version 1 --loss_virtual_weight 1 &
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 3 --ae_version 2 --loss_virtual_weight 1 &
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 5 --ae_version 3 --loss_virtual_weight 1 &
-wait
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 0 --ae_version 4 --loss_virtual_weight 1 &
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 1 --ae_version 5 --loss_virtual_weight 1 &
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 3 --ae_version 0 --loss_virtual_weight 1e-3 &
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 5 --ae_version 1 --loss_virtual_weight 1e-3 &
-wait
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 0 --ae_version 2 --loss_virtual_weight 1e-3 &
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 1 --ae_version 3 --loss_virtual_weight 1e-3 &
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 3 --ae_version 4 --loss_virtual_weight 1e-3 &
-python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 5 --ae_version 5 --loss_virtual_weight 1e-3 &
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 0 --ae_version 0 --loss_virtual_weight 1 &
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 1 --ae_version 1 --loss_virtual_weight 1 &
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 3 --ae_version 2 --loss_virtual_weight 1 &
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 5 --ae_version 3 --loss_virtual_weight 1 &
+#wait
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 0 --ae_version 4 --loss_virtual_weight 1 &
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 1 --ae_version 5 --loss_virtual_weight 1 &
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 3 --ae_version 0 --loss_virtual_weight 1e-3 &
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 5 --ae_version 1 --loss_virtual_weight 1e-3 &
+#wait
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 0 --ae_version 2 --loss_virtual_weight 1e-3 &
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 1 --ae_version 3 --loss_virtual_weight 1e-3 &
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 3 --ae_version 4 --loss_virtual_weight 1e-3 &
+#python train_resnet_by_virtual_generated_by_aetrainedbychromosome.py --gpus 5 --ae_version 5 --loss_virtual_weight 1e-3 &
+#01245
+python train_ae_chromosome_chamferloss.py --gpus 0 &
+python train_ae_chromosome_chamferloss.py --gpus 1 &
+python train_ae_chromosome_chamferloss.py --gpus 5 --chamfer_loss_weight 1e-3 &
+python train_ae_chromosome_chamferloss.py --gpus 4 --chamfer_loss_weight 1e-5 &

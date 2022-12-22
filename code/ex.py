@@ -341,8 +341,12 @@ x, y = data[0], data[1]
 data = x * index + y * (1 - index)
 print(data.shape, label.shape)
 imshow(data, label)'''
-data=torch.load("../data/onebatch_cifar10.pt")
+'''data=torch.load("../data/onebatch_cifar10.pt")
 data,label=data["data"],data["label"]
 data,label=data[:6],label[:6]
 print(data.shape,label.shape)
-imshow(data,label)
+imshow(data,label)'''
+data=torch.tensor([[0,1,2],[3,4,5]])
+print(data)
+data=torch.concat([data,data],dim=0)
+print(data)

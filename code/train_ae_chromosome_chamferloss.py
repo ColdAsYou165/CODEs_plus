@@ -19,6 +19,7 @@ parser.add_argument("--lr_dis", type=float, default=6e-5, help='对抗分类器�
 
 parser.add_argument("--w_loss_weight", type=float, default=1, help="miaoshixiong 1e-5")  # 训练aegenerate virtual时用的
 parser.add_argument("--blend_loss_weight", type=float, default=1., help="")
+parser.add_argument("--chamfer_loss_weight", type=float, default=1., help="")
 parser.add_argument("--scale", type=int, default=4, help="crossover的比例为1/scale")
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 args = parser.parse_args()
@@ -36,22 +37,20 @@ from tqdm import tqdm
 # import torch.backends.cudnn as cudnn
 import sys
 from datetime import datetime
+import chamfer3D.dist_chamfer_3D
 from model import *
 from models.ae_miao_chromosome import *
 from utils import *
 from models import resnet_orig
 
 # 起势
-# 不带v的为实验版本
-# 目前吧scale改成2 blendloss为1生成的还是像正常样本,所以调小wloss的权重
-# v3 鉴别器优化器从Adam换成RMSprop
-# v481 换成可学习参数
-name_project = "train_ae_chromosomev"
+# v1加上chamferloss
+name_project = "train_ae_chromosome_chamferloss_v181"
 args_str = get_args_str(args)
 root_result, (root_pth, root_pic) = getResultDir(name_project=name_project,
                                                  name_args=args_str)
 log = getLogger(formatter_str=None, root_filehandler=root_result + f"/logger.log")
-log.info("v481 换成可学习参数")
+log.info("v1加上chamfer loss最初版本")
 log.info(str(args))
 # writter = SummaryWriter(f"{root_result}/runs/run{datetime.now().strftime('%y-%m-%d,%H-%M-%S')}")
 seed = random.randint(0, 2022)
@@ -62,9 +61,9 @@ log.info(f"seed={seed}")
 
 num_classes = 10
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
-trainset_cifar10 = torchvision.datasets.CIFAR10(root="../data/cifar10", train=True, download=False,
+trainset_cifar10 = torchvision.datasets.CIFAR10(root="../data/cifar10", train=True, download=True,
                                                 transform=transform_train_cifar_miao)
-testset_cifar10 = torchvision.datasets.CIFAR10(root="../data/cifar10", train=False, download=False,
+testset_cifar10 = torchvision.datasets.CIFAR10(root="../data/cifar10", train=False, download=True,
                                                transform=transform_test_cifar_miao)
 trainloader_cifar10 = DataLoader(trainset_cifar10, args.batch_size, shuffle=True, num_workers=2)
 testloader_cifar10 = DataLoader(testset_cifar10, args.batch_size, shuffle=True, num_workers=2)
@@ -84,6 +83,7 @@ state_d = torch.load("../betterweights/resnet18_baseline_trainedbymiao_acc0.9532
 model_d.load_state_dict(state_d)
 
 # 优化器
+chamLoss = chamfer3D.dist_chamfer_3D.chamfer_3DDist()
 criterion_blend = torch.nn.CrossEntropyLoss().cuda()
 optimizer_g = torch.optim.Adam(model_g.parameters(), lr=args.lr)
 # optimizer_discriminator = torch.optim.Adam(discriminator.parameters(), lr=args.lr_dis, betas=(args.beta1, 0.999))
@@ -109,6 +109,8 @@ for epoch in range(args.epochs):
     pred_real_all, pred_virtual_all = 0, 0
     loss_w_all = 0
     loss_blend_all = 0
+    loss_chamfer_all = 0
+    # loss_chamfer_all = 0
 
     for batch_idx, (data, label) in enumerate(trainloader_cifar10):
         data = data.cuda()
@@ -119,7 +121,7 @@ for epoch in range(args.epochs):
         # output_real.backward(one)  # real 0
         pred_real_all += output_real.item()
         # 生成虚假图像
-        virtual_data, virtual_label = model_g.generate_virtual(data, label, set_differentlabel=True,
+        virtual_data, virtual_label, (index_1, index_2) = model_g.generate_virtual(data, label, set_differentlabel=True,
                                                                                    set_virtuallabel_uniform=False, scale=args.scale)
         output_virtual = discriminator(virtual_data.detach())
         (output_real - output_virtual).backward()
@@ -137,19 +139,30 @@ for epoch in range(args.epochs):
         pred = model_d(virtual_data)
         loss_blend = criterion_blend(pred, virtual_label)
         # (args.blend_loss_weight * loss_blend).backward(retain_graph=True)
-        (args.w_loss_weight * output_wantreal + args.blend_loss_weight * loss_blend).backward()
         loss_blend_all += loss_blend.item()
+        ## chamferloss
+        inputs_concat = torch.concat([data[index_1], data[index_2]], dim=2)
+        inputs_concat = torch.concat([inputs_concat, inputs_concat], dim=0)
+        inputs_concat = inputs_concat.transpose(1, 3).transpose(1, 2)  # n h w c
+        inputs_concat = inputs_concat.reshape(inputs_concat.shape[0], -1, inputs_concat.shape[3])  # n h*w c
+        virtual_data_chamfer = virtual_data.transpose(1, 3).transpose(1, 2)  # n h w c
+        virtual_data_chamfer = virtual_data_chamfer.reshape(virtual_data_chamfer.shape[0], -1, virtual_data_chamfer.shape[3])
+        dist1, dist2, _, _ = chamLoss(inputs_concat, virtual_data_chamfer)  # 苗师兄是这么写的,(原始头像,生成的图像)
+        loss_chamfer = (torch.mean(dist1)) + (torch.mean(dist2))
+        loss_chamfer_all += loss_chamfer.item()
 
+        (args.w_loss_weight * output_wantreal + args.blend_loss_weight * loss_blend + args.chamfer_loss_weight * loss_chamfer).backward()
         optimizer_g.step()
     # 观察量
     pred_real_all /= len(trainloader_cifar10)
     pred_virtual_all /= len(trainloader_cifar10)
     loss_w_all /= len(trainloader_cifar10)
     loss_blend_all /= len(trainloader_cifar10)
+    loss_chamfer_all /= len(trainloader_cifar10)
     log.info(
         f"train[{epoch}/{args.epochs}] : pred_real={pred_real_all:.2f}, pred_virtual={pred_virtual_all:.2f}, "
-        + f"loss_w={loss_w_all:.4f}, loss_blend={loss_blend_all:.4f}")
+        + f"loss_w={loss_w_all:.4f}, loss_blend={loss_blend_all:.4f},loss_chamfer={loss_chamfer_all}")
     save_image(torch.concat([data, virtual_data], dim=0),
                root_pic + f"/ae_chromosome_trainedtogeneratevirtual--epoch{epoch}.jpg")
-    if True and (epoch + 1) % 200 == 0:
+    if True and (epoch + 1) % 100 == 0:
         torch.save(model_g.state_dict(), root_pth + f"/ae_generatevirtual--epoch{epoch}.pth")

@@ -224,7 +224,7 @@ class AutoEncoder_Miao_crossover(nn.Module):
             # 如果为压制训练,则virtual_laebl设置为都是1/num_classes
             virtual_label = (torch.ones([len(virtual_data), self.num_classes]) / self.num_classes).cuda()
         if not set_test:
-            return virtual_data, virtual_label
+            return virtual_data, virtual_label, (index1, index2)
         else:
             return data[index1], data[index2], label[index1], label[index2], virtual_data1, virtual_data2, virtual_label
 
